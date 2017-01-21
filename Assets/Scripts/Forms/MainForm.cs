@@ -13,6 +13,7 @@ namespace ClimbeyEditor
     public class MainForm : Form
     {
         private static int yOffset;
+        public List<Camera> CameraViews = new List<Camera>();
 
         public MainForm()
         {
@@ -35,6 +36,8 @@ namespace ClimbeyEditor
             menu.Height = 26;
             menu.Width = Width;
             Controls.Add(menu);
+
+            this.MainMenuStrip = menu;
 
             yOffset += menu.Height;
 
