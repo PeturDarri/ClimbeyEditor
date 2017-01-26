@@ -42,13 +42,22 @@ public class ExtendedFlycam : MonoBehaviour
     {
         if (mouseEnabled)
         {
+            if (CameraManager.instance.cameraState != CameraManager.CameraState.Fly)
+            {
+                rotationX = transform.eulerAngles.y;
+                rotationY = -transform.eulerAngles.x;
+            }
+            CameraManager.instance.cameraState = CameraManager.CameraState.Fly;
             rotationX += Input.GetAxis("Mouse X") * cameraSensitivity * Time.deltaTime;
             rotationY += Input.GetAxis("Mouse Y") * cameraSensitivity * Time.deltaTime;
             rotationY = Mathf.Clamp (rotationY, -90, 90);
             transform.rotation = Quaternion.AngleAxis(rotationX, Vector3.up);
             transform.rotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
         }
-
+        else
+        {
+            CameraManager.instance.cameraState = CameraManager.CameraState.Free;
+        }
 
         if (Input.GetKey (KeyCode.LeftShift) || Input.GetKey (KeyCode.RightShift))
         {

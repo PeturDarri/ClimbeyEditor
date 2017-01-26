@@ -6,9 +6,12 @@ public class CameraManager : MonoBehaviour
     public static CameraManager instance = null;
     public Transform target;
     private Transform emptyTarget;
+    public CameraState cameraState;
     private MouseOrbit orbitScript;
 
-	// Use this for initialization
+    public enum CameraState {Free, Orbit, Pan, Fly}
+
+    // Use this for initialization
 	void Awake ()
 	{
 	    if (instance == null)

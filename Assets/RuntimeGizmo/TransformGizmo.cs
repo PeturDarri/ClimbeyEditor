@@ -163,7 +163,7 @@ namespace RuntimeGizmos
 			Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
 			Vector3 previousMousePosition = Vector3.zero;
 
-		    while(!Input.GetMouseButtonUp(0))
+		    while(!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
 			{
 				Ray mouseRay = myCamera.ScreenPointToRay(Input.mousePosition);
 				Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction, originalTargetPosition, planeNormal);
@@ -236,7 +236,6 @@ namespace RuntimeGizmos
 		    }
 			if(selectedAxis == Axis.None && Input.GetMouseButtonUp(0) && Vector3.Distance(prevMouse, Input.mousePosition) < 15)
 			{
-			    Debug.Log(Vector3.Distance(prevMouse, Input.mousePosition));
 			    RaycastHit hitInfo;
 				if(Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo))
 				{
