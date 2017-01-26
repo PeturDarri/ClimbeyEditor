@@ -44,10 +44,12 @@ namespace RuntimeGizmos
 		Quaternion totalRotationAmount;
 		Axis selectedAxis = Axis.None;
 		AxisInfo axisInfo;
-		Transform target;
+		public Transform target;
 		Camera myCamera;
+	    private Vector3 prevMouse = Vector3.zero;
 
-		static Material lineMaterial;
+
+	    static Material lineMaterial;
 
 		void Awake()
 		{
@@ -61,7 +63,8 @@ namespace RuntimeGizmos
 			SelectAxis();
 			GetTarget();
 			if(target == null) return;
-			
+
+		    TargetHotkeys();
 			TransformSelected();
 		}
 
@@ -98,7 +101,7 @@ namespace RuntimeGizmos
 			DrawSquares(handleSquares.z, zColor);
 			DrawSquares(handleSquares.all, allColor);
 
-			AxisVectors rotationAxisVector = circlesLines;
+		    AxisVectors rotationAxisVector = circlesLines;
 			if(isTransforming && space == TransformSpace.Global && type == TransformType.Rotate)
 			{
 				rotationAxisVector = drawCurrentCirclesLines;
@@ -135,10 +138,18 @@ namespace RuntimeGizmos
 		{
 		    if(selectedAxis != Axis.None && Input.GetMouseButtonDown(0))
 			{
-
 				StartCoroutine(TransformSelected(type));
 			}
 		}
+
+	    void TargetHotkeys()
+	    {
+	        //Press F to focus
+	        if (Input.GetKeyDown(KeyCode.F))
+	        {
+                CameraManager.instance.SetTarget(target);
+	        }
+	    }
 		
 		IEnumerator TransformSelected(TransformType type)
 		{
@@ -219,14 +230,20 @@ namespace RuntimeGizmos
 	
 		void GetTarget()
 		{
-			if(selectedAxis == Axis.None && Input.GetMouseButtonDown(0))
+		    if (Input.GetMouseButtonDown(0))
+		    {
+		        prevMouse = Input.mousePosition;
+		    }
+			if(selectedAxis == Axis.None && Input.GetMouseButtonUp(0) && Vector3.Distance(prevMouse, Input.mousePosition) < 15)
 			{
-
-			    Debug.Log("Hello");
+			    Debug.Log(Vector3.Distance(prevMouse, Input.mousePosition));
 			    RaycastHit hitInfo;
 				if(Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo))
 				{
-					target = hitInfo.transform;
+				    if (hitInfo.transform.GetComponent<LevelShape>() != null)
+				    {
+				        target = hitInfo.transform;
+				    }
 				}else{
 					target = null;
 				}
@@ -490,6 +507,8 @@ namespace RuntimeGizmos
 				GL.Vertex(lines[i]);
 				GL.Vertex(lines[i + 1]);
 			}
+
+		    //Debug.Log(lines[0]);
 
 			GL.End();
 		}
