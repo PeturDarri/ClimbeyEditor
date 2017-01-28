@@ -47,6 +47,7 @@ public class MouseOrbit : MonoBehaviour
         {
             CameraManager.instance.cameraState = CameraManager.CameraState.Orbit;
             //  get the distance the mouse moved in the respective direction
+
             x += Input.GetAxis("Mouse X") * rotateSpeed;
             y -= Input.GetAxis("Mouse Y") * rotateSpeed;
 

@@ -45,6 +45,7 @@ namespace RuntimeGizmos
 		Axis selectedAxis = Axis.None;
 		AxisInfo axisInfo;
 		public Transform target;
+	    public Transform parentTarget;
 		Camera myCamera;
 	    private Vector3 prevMouse = Vector3.zero;
 
@@ -57,6 +58,11 @@ namespace RuntimeGizmos
 			SetMaterial();
 		}
 
+	    void Start()
+	    {
+	        SelectionManager.instance.OnSelectionChanged += OnSelectionChanged;
+	    }
+
 		void Update()
 		{
 			SetSpaceAndType();
@@ -64,7 +70,6 @@ namespace RuntimeGizmos
 			GetTarget();
 			if(target == null) return;
 
-		    TargetHotkeys();
 			TransformSelected();
 		}
 
@@ -142,12 +147,16 @@ namespace RuntimeGizmos
 			}
 		}
 
-	    void TargetHotkeys()
+	    //Events
+	    void OnSelectionChanged()
 	    {
-	        //Press F to focus
-	        if (Input.GetKeyDown(KeyCode.F))
+	        if (SelectionManager.instance.isEmpty)
 	        {
-                CameraManager.instance.SetTarget(target);
+	            target = null;
+	        }
+	        else
+	        {
+	            target = SelectionManager.instance.transform;
 	        }
 	    }
 		
@@ -236,16 +245,9 @@ namespace RuntimeGizmos
 		    }
 			if(selectedAxis == Axis.None && Input.GetMouseButtonUp(0) && Vector3.Distance(prevMouse, Input.mousePosition) < 15)
 			{
-			    RaycastHit hitInfo;
-				if(Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo))
-				{
-				    if (hitInfo.transform.GetComponent<LevelShape>() != null)
-				    {
-				        target = hitInfo.transform;
-				    }
-				}else{
-					target = null;
-				}
+                RaycastHit hitInfo;
+			    Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo);
+                SelectionManager.instance.SetSelection(hitInfo.transform);
 			}
 		}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RuntimeGizmos
@@ -25,5 +26,17 @@ namespace RuntimeGizmos
 		{
 			return Vector3.Dot(direction, otherDirection) > 0f;
 		}
+
+	    public static Vector3 CenterOfVectors(List<Vector3> vector3s)
+	    {
+	        Vector3 sum = new Vector3();
+
+	        foreach (var vector in vector3s)
+	        {
+	            sum += vector;
+	        }
+
+	        return sum / vector3s.Count;
+	    }
 	}
 }
