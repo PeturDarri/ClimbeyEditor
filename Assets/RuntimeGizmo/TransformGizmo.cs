@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 namespace RuntimeGizmos
 {
@@ -141,7 +142,7 @@ namespace RuntimeGizmos
 
 		void TransformSelected()
 		{
-		    if(selectedAxis != Axis.None && Input.GetMouseButtonDown(0))
+		    if(selectedAxis != Axis.None && GetMouseButtonDown(0))
 			{
 				StartCoroutine(TransformSelected(type));
 			}
@@ -172,7 +173,7 @@ namespace RuntimeGizmos
 			Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
 			Vector3 previousMousePosition = Vector3.zero;
 
-		    while(!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
+		    while(!GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
 			{
 				Ray mouseRay = myCamera.ScreenPointToRay(Input.mousePosition);
 				Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction, originalTargetPosition, planeNormal);
@@ -239,11 +240,11 @@ namespace RuntimeGizmos
 	
 		void GetTarget()
 		{
-		    if (Input.GetMouseButtonDown(0))
+		    if (GetMouseButtonDown(0))
 		    {
 		        prevMouse = Input.mousePosition;
 		    }
-			if(selectedAxis == Axis.None && Input.GetMouseButtonUp(0) && Vector3.Distance(prevMouse, Input.mousePosition) < 15)
+			if(selectedAxis == Axis.None && GetMouseButtonUp(0) && Vector3.Distance(prevMouse, Input.mousePosition) < 15)
 			{
                 RaycastHit hitInfo;
 			    Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo);
@@ -254,7 +255,7 @@ namespace RuntimeGizmos
 		AxisVectors selectedLinesBuffer = new AxisVectors();
 		void SelectAxis()
 		{
-			if(!Input.GetMouseButtonDown(0)) return;
+			if(!GetMouseButtonDown(0)) return;
 			selectedAxis = Axis.None;
 
 			float xClosestDistance = float.MaxValue;
@@ -509,8 +510,6 @@ namespace RuntimeGizmos
 				GL.Vertex(lines[i + 1]);
 			}
 
-		    //Debug.Log(lines[0]);
-
 			GL.End();
 		}
 
@@ -590,5 +589,25 @@ namespace RuntimeGizmos
 				#endregion
 			}
 		}
+
+	    private bool GetMouseButtonDown(int button)
+	    {
+	        if (!EventSystem.current.IsPointerOverGameObject())
+	        {
+	            return Input.GetMouseButtonDown(button);
+	        }
+
+	        return false;
+	    }
+
+	    private bool GetMouseButtonUp(int button)
+	    {
+	        if (!EventSystem.current.IsPointerOverGameObject())
+	        {
+	            return Input.GetMouseButtonUp(button);
+	        }
+
+	        return false;
+	    }
 	}
 }

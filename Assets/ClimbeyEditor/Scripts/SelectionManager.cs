@@ -9,7 +9,7 @@ using RuntimeGizmos;
 public class SelectionManager : MonoBehaviour
 {
 
-    public static SelectionManager instance = null;
+    public static SelectionManager instance;
 
     private List<LevelObject> _selection;
     public List<LevelObject> Selection
@@ -45,6 +45,7 @@ public class SelectionManager : MonoBehaviour
     void Update()
     {
         SelectionHotkeys();
+
     }
 
     public void SetSelection(Transform levelObject)
@@ -56,7 +57,6 @@ public class SelectionManager : MonoBehaviour
                 //Set selection
                 if (Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftShift))
                 {
-                    Debug.Log("Holding control!");
                     //Add to selection
 
                     //Save current list
@@ -70,7 +70,6 @@ public class SelectionManager : MonoBehaviour
                 {
                     //Remove from selection
                     RemoveFromSelection(levelObject.GetComponent<LevelObject>());
-                    Debug.Log("Remove");
                 }
                 else
                 {
@@ -126,6 +125,11 @@ public class SelectionManager : MonoBehaviour
             {
                 DuplicateSelection();
             }
+            else if (Input.GetKeyDown(KeyCode.A))
+            {
+                //Select all
+                SelectAll();
+            }
         }
         else
         {
@@ -139,6 +143,11 @@ public class SelectionManager : MonoBehaviour
                     CameraManager.instance.SetTarget(transform);
                 }
             }
+            //Press Delete to delete selection
+            else if (Input.GetKeyDown(KeyCode.Delete))
+            {
+                DeleteSelection();
+            }
         }
     }
 
@@ -146,7 +155,6 @@ public class SelectionManager : MonoBehaviour
     {
         if (!isEmpty)
         {
-            Debug.Log("Duplicating");
             var dupeList = GetSelection();
             ClearSelection();
             var newList = new List<LevelObject>();
@@ -169,7 +177,6 @@ public class SelectionManager : MonoBehaviour
         {
             posList.Add(obj.transform.position);
         }
-
         //Set parent position to center of all children
         transform.position = ExtVector3.CenterOfVectors(posList);
 
@@ -182,6 +189,23 @@ public class SelectionManager : MonoBehaviour
 
     private void AddToSelection(LevelObject levelObject)
     {
+        //Check if current LevelObject is a child of another LevelObject
+        LevelObject parent;
+        try
+        {
+            parent = levelObject.transform.parent.GetComponent<LevelObject>();
+        }
+        catch
+        {
+            parent = null;
+        }
+
+        while (parent != null)
+        {
+            levelObject = parent;
+            parent = levelObject.transform.parent.GetComponent<LevelObject>();
+        }
+
         levelObject.transform.parent = transform;
         levelObject.SetSelection(true);
 
@@ -211,5 +235,21 @@ public class SelectionManager : MonoBehaviour
         {
             OnSelectionChanged();
         }
+    }
+
+    private void DeleteSelection()
+    {
+        var oldList = GetSelection();
+        ClearSelection();
+        foreach (var obj in oldList)
+        {
+            Destroy(obj.gameObject);
+        }
+    }
+
+    private void SelectAll()
+    {
+        ClearSelection();
+        SetMultiSelection(LevelManager.instance.LevelObjects);
     }
 }

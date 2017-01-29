@@ -3,7 +3,7 @@ using System.Collections;
 
 public class CameraManager : MonoBehaviour
 {
-    public static CameraManager instance = null;
+    public static CameraManager instance;
     public Transform target;
     private Transform emptyTarget;
     public CameraState cameraState;

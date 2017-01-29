@@ -15,7 +15,6 @@ public class LevelObject : MonoBehaviour
     public bool LockZ;
 
     private bool _selected;
-    private float outlineWidth = 0.05f;
 
     public LevelObject()
     {
@@ -60,17 +59,7 @@ public class LevelObject : MonoBehaviour
 
     public void SetSelection(bool selected)
     {
-        var renderer = GetComponent<Renderer>();
-        if (selected)
-        {
-            _selected = true;
-            renderer.material.SetFloat("_Outline", outlineWidth);
-        }
-        else
-        {
-            _selected = false;
-            renderer.material.SetFloat("_Outline", 0);
-        }
+        _selected = selected;
     }
 }
 
