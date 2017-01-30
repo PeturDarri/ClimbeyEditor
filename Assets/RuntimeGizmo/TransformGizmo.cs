@@ -13,6 +13,7 @@ namespace RuntimeGizmos
 		public TransformType type = TransformType.Move;
 
 		//These are the same as the unity editor hotkeys
+	    public KeyCode SetBoundType = KeyCode.Q;
 		public KeyCode SetMoveType = KeyCode.W;
 		public KeyCode SetRotateType = KeyCode.E;
 		public KeyCode SetScaleType = KeyCode.R;
@@ -45,10 +46,12 @@ namespace RuntimeGizmos
 		Quaternion totalRotationAmount;
 		Axis selectedAxis = Axis.None;
 		AxisInfo axisInfo;
-		public Transform target;
+
+	    public Transform target;
 	    public Transform parentTarget;
 		Camera myCamera;
 	    private Vector3 prevMouse = Vector3.zero;
+	    private bool gridSnapping = true;
 
 
 	    static Material lineMaterial;
@@ -127,8 +130,9 @@ namespace RuntimeGizmos
 
 		void SetSpaceAndType()
 		{
-			if(Input.GetKeyDown(SetMoveType)) type = TransformType.Move;
-			else if(Input.GetKeyDown(SetRotateType)) type = TransformType.Rotate;
+		    if(Input.GetKeyDown(SetMoveType)) type = TransformType.Move;
+			else if(Input.GetKeyDown(SetBoundType)) type = TransformType.Bounds;
+		    else if(Input.GetKeyDown(SetRotateType)) type = TransformType.Rotate;
 			else if(Input.GetKeyDown(SetScaleType)) type = TransformType.Scale;
 
 			if(Input.GetKeyDown(SetSpaceToggle))
@@ -151,14 +155,13 @@ namespace RuntimeGizmos
 	    //Events
 	    void OnSelectionChanged()
 	    {
-	        Debug.Log("Selection changed!");
 	        if (SelectionManager.instance.isEmpty)
 	        {
 	            target = null;
 	        }
 	        else
 	        {
-	            target = SelectionManager.instance.transform;
+	            target = SelectionManager.instance.RealTransform;
 	        }
 	    }
 		
@@ -168,7 +171,7 @@ namespace RuntimeGizmos
 			totalScaleAmount = 0;
 			totalRotationAmount = Quaternion.identity;
 
-			Vector3 originalTargetPosition = target.position;
+		    Vector3 originalTargetPosition = target.position;
 			Vector3 planeNormal = (transform.position - target.position).normalized;
 			Vector3 axis = GetSelectedAxisDirection();
 			Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Level;
 using RuntimeGizmos;
 
@@ -11,6 +12,8 @@ public class SelectionManager : MonoBehaviour
 {
 
     public static SelectionManager instance;
+
+    public Transform RealTransform;
 
     private List<LevelObject> _selection;
     public List<LevelObject> Selection
@@ -24,30 +27,41 @@ public class SelectionManager : MonoBehaviour
         get { return GetSelection().Count < 1; }
     }
 
+    private bool gridSnapping = true;
+    private float gridSize = 1;
+    private float angleSnap = 1;
+
     //Events
     public delegate void OnSelectionChangedEvent();
     public event OnSelectionChangedEvent OnSelectionChanged;
 
-    void Awake()
-	{
-	    if (instance == null)
-	    {
-	        instance = this;
-	    }
-        else if (instance != this)
-	    {
-	        Destroy(gameObject);
-
-	    }
-
-	    _selection = GetComponentsInChildren<LevelObject>().ToList();
-	    Selection = GetComponentsInChildren<LevelObject>().ToList();
-	}
-
-    void Update()
+    private void Awake()
     {
-        SelectionHotkeys();
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
 
+        }
+
+        _selection = GetComponentsInChildren<LevelObject>().ToList();
+        Selection = GetComponentsInChildren<LevelObject>().ToList();
+        RealTransform = new GameObject("empty gridsnapper").transform;
+    }
+
+    private void Update()
+    {
+        gridSnapping = true;
+        SelectionHotkeys();
+    }
+
+    private void LateUpdate()
+    {
+        if (gridSnapping)
+            SnapToGrid();
     }
 
     public void SetSelection(Transform levelObject)
@@ -77,7 +91,7 @@ public class SelectionManager : MonoBehaviour
                 {
                     ClearSelection();
 
-                    transform.position = levelObject.position;
+                    CenterSelf(levelObject.GetComponent<LevelObject>());
                     //Set object as selection
                     AddToSelection(levelObject.GetComponent<LevelObject>());
                 }
@@ -123,11 +137,31 @@ public class SelectionManager : MonoBehaviour
         Selection = GetComponentsInChildren<LevelObject>().ToList();
     }
 
+    private void CenterSelf(List<LevelObject> objList = null)
+    {
+
+        //Set parent position to center of all children
+        var bounds = GetBounds(objList);
+        transform.localScale = bounds.size;
+        transform.position = transform.position + bounds.center;
+    }
+
+    private void CenterSelf(LevelObject obj)
+    {
+        //Set parent position to center of all children
+        var objList = new List<LevelObject> {obj};
+        Debug.Log(objList.Count);
+        var bounds = GetBounds(objList);
+        transform.localScale = bounds.size;
+        transform.position = transform.position + bounds.center;
+    }
+
     private void SelectionHotkeys()
     {
         //Control
         if (Input.GetKey(KeyCode.LeftControl))
         {
+            gridSnapping = false;
             //Press Ctrl+D to duplicate target
             if (Input.GetKeyDown(KeyCode.D))
             {
@@ -138,19 +172,22 @@ public class SelectionManager : MonoBehaviour
                 //Select all
                 SelectAll();
             }
-
+            else if (Input.GetMouseButton(0))
+            {
+                gridSnapping = false;
+            }
         }
         else if (Input.GetKey(KeyCode.LeftShift))
         {
             if (Input.GetKeyDown(KeyCode.S))
-                {
-                    LevelManager.instance.SaveLevel("Itsa me");
-                }
+            {
+                LevelManager.instance.SaveLevel("Itsa me");
+            }
         }
         else
         {
             //Non-modifier
-            
+
             //Press F to focus
             if (Input.GetKeyDown(KeyCode.F))
             {
@@ -198,14 +235,42 @@ public class SelectionManager : MonoBehaviour
         {
             posList.Add(obj.transform.position);
         }
-        //Set parent position to center of all children
-        transform.position = ExtVector3.CenterOfVectors(posList);
+
+        CenterSelf(objList);
 
         //Set all objects as children of parent
         foreach (var obj in objList)
         {
             AddToSelection(obj);
         }
+    }
+
+    public Bounds GetBounds(List<LevelObject> children = null)
+    {
+        if (children == null)
+        {
+            children = GetSelection();
+            if (children.Count == 0)
+            {
+                return new Bounds();
+            }
+        }
+        var currentRotation = transform.rotation;
+        transform.rotation = Quaternion.Euler(0f,0f,0f);
+
+        var bounds = new Bounds(children[0].transform.position, Vector3.zero);
+
+        foreach(var child in children)
+        {
+            var render = child.GetComponent<Renderer>();
+            bounds.Encapsulate(render.bounds);
+        }
+
+        var localCenter = bounds.center - transform.position;
+        bounds.center = localCenter;
+
+        transform.rotation = currentRotation;
+        return bounds;
     }
 
     private void AddToSelection(LevelObject levelObject)
@@ -265,5 +330,16 @@ public class SelectionManager : MonoBehaviour
         {
             OnSelectionChanged();
         }
+    }
+
+    private void SnapToGrid()
+    {
+        Debug.Log(RealTransform.position);
+        var currentPos = RealTransform.position;
+        var currentRot = RealTransform.eulerAngles;
+        var currentSize = RealTransform.localScale;
+        transform.position = new Vector3(Mathf.Round(currentPos.x) / gridSize, Mathf.Round(currentPos.y) / gridSize, Mathf.Round(currentPos.z) / gridSize);
+        transform.eulerAngles = new Vector3(Mathf.Round(currentRot.x) / angleSnap, Mathf.Round(currentRot.y) / angleSnap, Mathf.Round(currentRot.z) / angleSnap);
+        transform.localScale = new Vector3(Mathf.Round(currentSize.x) / gridSize, Mathf.Round(currentSize.y) / gridSize, Mathf.Round(currentSize.z) / gridSize);
     }
 }
