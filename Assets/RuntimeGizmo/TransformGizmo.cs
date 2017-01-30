@@ -151,6 +151,7 @@ namespace RuntimeGizmos
 	    //Events
 	    void OnSelectionChanged()
 	    {
+	        Debug.Log("Selection changed!");
 	        if (SelectionManager.instance.isEmpty)
 	        {
 	            target = null;

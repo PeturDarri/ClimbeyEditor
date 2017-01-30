@@ -26,7 +26,8 @@ public class ToolManager : MonoBehaviour {
 
     public GameObject SpawnObject(GameObject spawnObject)
     {
-        var obj = Instantiate(spawnObject, CameraManager.instance.target.position, Quaternion.identity);
+        var obj = Instantiate(spawnObject);
+        obj.transform.position = CameraManager.instance.GetTarget();
         CameraManager.instance.SetTarget(obj.transform);
         obj.name = spawnObject.name;
         SelectionManager.instance.SetSelection(obj.transform);

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Level;
 using RuntimeGizmos;
 
 public class SelectionManager : MonoBehaviour
@@ -36,6 +37,7 @@ public class SelectionManager : MonoBehaviour
         else if (instance != this)
 	    {
 	        Destroy(gameObject);
+
 	    }
 
 	    _selection = GetComponentsInChildren<LevelObject>().ToList();
@@ -79,11 +81,21 @@ public class SelectionManager : MonoBehaviour
                     //Set object as selection
                     AddToSelection(levelObject.GetComponent<LevelObject>());
                 }
+
+                if (OnSelectionChanged != null)
+                {
+                    OnSelectionChanged();
+                }
             }
         }
         else
         {
             ClearSelection();
+
+            if (OnSelectionChanged != null)
+            {
+                OnSelectionChanged();
+            }
         }
     }
 
@@ -95,24 +107,18 @@ public class SelectionManager : MonoBehaviour
 
     private void ClearSelection()
     {
-        UpdateSelection();
 
         //Remove current selection
-        foreach (var lvlObject in _selection)
+        foreach (var lvlObject in GetSelection())
         {
             //Set it to parent of SelectionManager (Level GameObject)
             RemoveFromSelection(lvlObject);
-        }
-
-        if (OnSelectionChanged != null)
-        {
-            OnSelectionChanged();
         }
     }
 
     private void UpdateSelection()
     {
-        _selection = GetComponentsInChildren<LevelObject>().ToList();
+        Selection = GetComponentsInChildren<LevelObject>().ToList();
     }
 
     private void SelectionHotkeys()
@@ -130,6 +136,14 @@ public class SelectionManager : MonoBehaviour
                 //Select all
                 SelectAll();
             }
+
+        }
+        else if (Input.GetKey(KeyCode.LeftShift))
+        {
+            if (Input.GetKeyDown(KeyCode.S))
+                {
+                    LevelManager.instance.SaveLevel("Itsa me");
+                }
         }
         else
         {
@@ -166,6 +180,11 @@ public class SelectionManager : MonoBehaviour
                 newList.Add(newObj);
             }
             SetMultiSelection(newList);
+
+            if (OnSelectionChanged != null)
+            {
+                OnSelectionChanged();
+            }
         }
     }
 
@@ -208,11 +227,6 @@ public class SelectionManager : MonoBehaviour
 
         levelObject.transform.parent = transform;
         levelObject.SetSelection(true);
-
-        if (OnSelectionChanged != null)
-        {
-            OnSelectionChanged();
-        }
     }
 
     private void RemoveFromSelection(LevelObject levelObject)
@@ -221,19 +235,6 @@ public class SelectionManager : MonoBehaviour
         {
             levelObject.transform.parent = transform.parent;
             levelObject.SetSelection(false);
-
-            //Reset multi, so parent gets recentered
-            var oldList = GetSelection();
-            if (oldList.Count > 0)
-            {
-                ClearSelection();
-                SetMultiSelection(oldList);
-            }
-        }
-
-        if (OnSelectionChanged != null)
-        {
-            OnSelectionChanged();
         }
     }
 
@@ -244,6 +245,12 @@ public class SelectionManager : MonoBehaviour
         foreach (var obj in oldList)
         {
             Destroy(obj.gameObject);
+            //Debug.Log("Destroy!");
+        }
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
         }
     }
 
@@ -251,5 +258,10 @@ public class SelectionManager : MonoBehaviour
     {
         ClearSelection();
         SetMultiSelection(LevelManager.instance.LevelObjects);
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
+        }
     }
 }

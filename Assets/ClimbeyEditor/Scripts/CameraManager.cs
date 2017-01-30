@@ -4,8 +4,6 @@ using System.Collections;
 public class CameraManager : MonoBehaviour
 {
     public static CameraManager instance;
-    public Transform target;
-    private Transform emptyTarget;
     public CameraState cameraState;
     private MouseOrbit orbitScript;
 
@@ -22,10 +20,7 @@ public class CameraManager : MonoBehaviour
 	    DontDestroyOnLoad(gameObject);
 
 	    //Save the inital target as the empty game object
-	    emptyTarget = target;
 	    orbitScript = GetComponent<MouseOrbit>();
-
-	    SetTarget(emptyTarget);
 	}
 	
 	// Update is called once per frame
@@ -36,6 +31,10 @@ public class CameraManager : MonoBehaviour
     public void SetTarget(Transform _target)
     {
         orbitScript.Focus(_target);
-        target = _target;
+    }
+
+    public Vector3 GetTarget()
+    {
+        return orbitScript.target;
     }
 }
