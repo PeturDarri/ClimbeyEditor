@@ -114,6 +114,8 @@ public class SelectionManager : MonoBehaviour
             //Set it to parent of SelectionManager (Level GameObject)
             RemoveFromSelection(lvlObject);
         }
+
+        transform.rotation = Quaternion.identity;
     }
 
     private void UpdateSelection()
