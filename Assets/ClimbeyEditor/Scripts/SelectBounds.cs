@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using RuntimeGizmos;
 using UnityEngine;
@@ -14,7 +16,9 @@ public class SelectBounds : MonoBehaviour
     public Texture HandleTexture;
 
     private Bounds bounds;
+    private TransformSpace transformSpace = TransformSpace.Global;
     private Vector3 bLeft1, tLeft1, bRight1, tRight1, bLeft2, tLeft2, bRight2, tRight2;
+    private Vector3 localRotation;
 
     //Handles
     //private Vector3 handleFront, handleBehind, handleRight, handleLeft, handleTop, handleBottom;
@@ -25,8 +29,7 @@ public class SelectBounds : MonoBehaviour
 
     private Transform select
     {
-        get { return SelectionManager.instance.RealTransform; }
-        set { SelectionManager.instance.RealTransform = value; }
+        get { return SelectionManager.instance.transform; }
     }
 
     // Use this for initialization
@@ -40,13 +43,19 @@ public class SelectBounds : MonoBehaviour
         if (!ShowHandles)
             return;
         //Draw handles
-        foreach (var handle in handles)
+        var sortedHandles = handles.OrderBy(o=>Vector3.Distance(select.position + o, Camera.main.transform.position)).ToList();
+        sortedHandles.Reverse();
+
+        for (int i = 0; i < sortedHandles.Count; i++)
         {
+            var handle = sortedHandles[i];
+
             if (handle == Vector3.zero)
                 break;
             var handlePos = Camera.main.WorldToScreenPoint(select.position + handle);
             handlePos.y = Screen.height - handlePos.y;
             var pos = new Rect(new Vector2(handlePos.x - 4, handlePos.y - 4), new Vector2(8, 8));
+            GUI.color = new Color(1, 1, 1, 1 * ((float)(i+1) / sortedHandles.Count));
             GUI.DrawTexture(pos, HandleTexture);
         }
     }
@@ -60,6 +69,7 @@ public class SelectBounds : MonoBehaviour
     private void LateUpdate()
     {
         ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds;
+        transformSpace = GetComponent<TransformGizmo>().space;
 
         if (ShowBounds)
         {
@@ -75,7 +85,7 @@ public class SelectBounds : MonoBehaviour
 
     private void UpdateBounds()
     {
-        bounds = SelectionManager.instance.GetBounds();
+        bounds = SelectionManager.instance.SelectBounds;
 
         //Calculate 8 corners and save
         bLeft1 = new Vector3(-bounds.extents.x, -bounds.extents.y, -bounds.extents.z);
@@ -159,8 +169,9 @@ public class SelectBounds : MonoBehaviour
                     ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) *
                     scaleSpeedMultiplier;
                 var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
-                target.localScale += (positive * scaleAmount);
-                target.transform.position += (axis * scaleAmount) / 2;
+                var emptyTarget = SelectionManager.instance.emptySelection;
+                emptyTarget.localScale += (positive * scaleAmount);
+                emptyTarget.transform.position += (axis * scaleAmount) / 2;
             }
             previousMousePosition = mousePosition;
 

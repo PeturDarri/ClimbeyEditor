@@ -13,8 +13,6 @@ public class SelectionManager : MonoBehaviour
 
     public static SelectionManager instance;
 
-    public Transform RealTransform;
-
     private List<LevelObject> _selection;
     public List<LevelObject> Selection
     {
@@ -27,9 +25,13 @@ public class SelectionManager : MonoBehaviour
         get { return GetSelection().Count < 1; }
     }
 
-    private bool gridSnapping = true;
-    private float gridSize = 1;
-    private float angleSnap = 1;
+    public Transform emptySelection;
+    private Vector3 posOffset, rotOffset, sizeOffset;
+
+    public Bounds SelectBounds
+    {
+        get { return GetBounds(); }
+    }
 
     //Events
     public delegate void OnSelectionChangedEvent();
@@ -47,21 +49,19 @@ public class SelectionManager : MonoBehaviour
 
         }
 
+        if (emptySelection == null)
+        {
+            emptySelection = new GameObject("emptySelection").transform;
+        }
+
         _selection = GetComponentsInChildren<LevelObject>().ToList();
         Selection = GetComponentsInChildren<LevelObject>().ToList();
-        RealTransform = new GameObject("empty gridsnapper").transform;
     }
 
     private void Update()
     {
-        gridSnapping = true;
         SelectionHotkeys();
-    }
-
-    private void LateUpdate()
-    {
-        if (gridSnapping)
-            SnapToGrid();
+        TransformSelection();
     }
 
     public void SetSelection(Transform levelObject)
@@ -143,17 +143,20 @@ public class SelectionManager : MonoBehaviour
         //Set parent position to center of all children
         var bounds = GetBounds(objList);
         transform.localScale = bounds.size;
+        emptySelection.localScale = bounds.size;
         transform.position = transform.position + bounds.center;
+        emptySelection.position = transform.position + bounds.center;
     }
 
     private void CenterSelf(LevelObject obj)
     {
         //Set parent position to center of all children
         var objList = new List<LevelObject> {obj};
-        Debug.Log(objList.Count);
         var bounds = GetBounds(objList);
         transform.localScale = bounds.size;
+        emptySelection.localScale = bounds.size;
         transform.position = transform.position + bounds.center;
+        emptySelection.position = transform.position + bounds.center;
     }
 
     private void SelectionHotkeys()
@@ -161,7 +164,6 @@ public class SelectionManager : MonoBehaviour
         //Control
         if (Input.GetKey(KeyCode.LeftControl))
         {
-            gridSnapping = false;
             //Press Ctrl+D to duplicate target
             if (Input.GetKeyDown(KeyCode.D))
             {
@@ -172,9 +174,9 @@ public class SelectionManager : MonoBehaviour
                 //Select all
                 SelectAll();
             }
-            else if (Input.GetMouseButton(0))
+            else if (Input.GetKeyDown(KeyCode.G))
             {
-                gridSnapping = false;
+                //GroupSelection();
             }
         }
         else if (Input.GetKey(KeyCode.LeftShift))
@@ -245,7 +247,7 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    public Bounds GetBounds(List<LevelObject> children = null)
+    private Bounds GetBounds(List<LevelObject> children = null)
     {
         if (children == null)
         {
@@ -294,6 +296,8 @@ public class SelectionManager : MonoBehaviour
 
         levelObject.transform.parent = transform;
         levelObject.SetSelection(true);
+
+        emptySelection.position = transform.position;
     }
 
     private void RemoveFromSelection(LevelObject levelObject)
@@ -332,14 +336,10 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private void SnapToGrid()
+    private void TransformSelection()
     {
-        Debug.Log(RealTransform.position);
-        var currentPos = RealTransform.position;
-        var currentRot = RealTransform.eulerAngles;
-        var currentSize = RealTransform.localScale;
-        transform.position = new Vector3(Mathf.Round(currentPos.x) / gridSize, Mathf.Round(currentPos.y) / gridSize, Mathf.Round(currentPos.z) / gridSize);
-        transform.eulerAngles = new Vector3(Mathf.Round(currentRot.x) / angleSnap, Mathf.Round(currentRot.y) / angleSnap, Mathf.Round(currentRot.z) / angleSnap);
-        transform.localScale = new Vector3(Mathf.Round(currentSize.x) / gridSize, Mathf.Round(currentSize.y) / gridSize, Mathf.Round(currentSize.z) / gridSize);
+        transform.position = emptySelection.position;
+        transform.eulerAngles = emptySelection.eulerAngles;
+        transform.localScale = emptySelection.localScale;
     }
 }
