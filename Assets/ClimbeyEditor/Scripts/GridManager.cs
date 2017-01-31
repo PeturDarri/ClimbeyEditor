@@ -31,7 +31,6 @@ public class GridManager: MonoBehaviour
 
     public void Update()
     {
-        // Check if we should snap
         emptySelection = SelectionManager.instance.transform;
 
         if ( DoSnap

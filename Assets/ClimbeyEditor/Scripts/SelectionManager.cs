@@ -128,7 +128,8 @@ public class SelectionManager : MonoBehaviour
             //Set it to parent of SelectionManager (Level GameObject)
             RemoveFromSelection(lvlObject);
         }
-
+        Debug.Log("clear");
+        emptySelection.rotation = Quaternion.identity;
         transform.rotation = Quaternion.identity;
     }
 
@@ -231,19 +232,22 @@ public class SelectionManager : MonoBehaviour
 
     private void SetMultiSelection(List<LevelObject> objList)
     {
-        //Get all positions of children to list
-        List<Vector3> posList = new List<Vector3>();
-        foreach (var obj in objList)
+        if (objList.Count > 0)
         {
-            posList.Add(obj.transform.position);
-        }
+            //Get all positions of children to list
+            List<Vector3> posList = new List<Vector3>();
+            foreach (var obj in objList)
+            {
+                posList.Add(obj.transform.position);
+            }
 
-        CenterSelf(objList);
+            CenterSelf(objList);
 
-        //Set all objects as children of parent
-        foreach (var obj in objList)
-        {
-            AddToSelection(obj);
+            //Set all objects as children of parent
+            foreach (var obj in objList)
+            {
+                AddToSelection(obj);
+            }
         }
     }
 
@@ -272,6 +276,7 @@ public class SelectionManager : MonoBehaviour
         bounds.center = localCenter;
 
         transform.rotation = currentRotation;
+
         return bounds;
     }
 
@@ -339,7 +344,7 @@ public class SelectionManager : MonoBehaviour
     private void TransformSelection()
     {
         transform.position = emptySelection.position;
-        transform.eulerAngles = emptySelection.eulerAngles;
         transform.localScale = emptySelection.localScale;
+        transform.rotation = emptySelection.rotation;
     }
 }

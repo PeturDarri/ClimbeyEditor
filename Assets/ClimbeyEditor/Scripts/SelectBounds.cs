@@ -25,7 +25,15 @@ public class SelectBounds : MonoBehaviour
     private List<Vector3> handles = new List<Vector3>();
     private Vector3 selectedHandle;
     private float minHandleDistance = 8;
+    private float moveSpeedMultiplier = 1;
     private float scaleSpeedMultiplier = 1;
+    private bool isTransforming;
+    private enum MoveType
+    {
+        Stretch,
+        Move
+    };
+    private MoveType moveType = MoveType.Stretch;
 
     private Transform select
     {
@@ -78,7 +86,8 @@ public class SelectBounds : MonoBehaviour
         if (ShowHandles)
         {
             UpdateHandles();
-            GetHandle();
+            if (!isTransforming)
+                GetHandle();
             ScaleHandle();
         }
     }
@@ -133,6 +142,12 @@ public class SelectBounds : MonoBehaviour
             if (i >= 0)
             {
                 selectedHandle = handles[i];
+                moveType = MoveType.Stretch;
+            }
+            else
+            {
+                selectedHandle = Vector3.right;
+                moveType = MoveType.Move;
             }
         }
         else if (Input.GetMouseButtonUp(0))
@@ -157,26 +172,40 @@ public class SelectBounds : MonoBehaviour
         Vector3 axis = selectedHandle.normalized;
         Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
         Vector3 previousMousePosition = Vector3.zero;
+        var emptyTarget = SelectionManager.instance.emptySelection;
+        isTransforming = true;
+
         while (!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
         {
             Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction, originalTargetPosition, planeNormal);
+            Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction,
+                originalTargetPosition, planeNormal);
 
             if (previousMousePosition != Vector3.zero && mousePosition != Vector3.zero)
             {
-                Vector3 projected = projectedAxis;
-                float scaleAmount =
-                    ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) *
-                    scaleSpeedMultiplier;
-                var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
-                var emptyTarget = SelectionManager.instance.emptySelection;
-                emptyTarget.localScale += (positive * scaleAmount);
-                emptyTarget.transform.position += (axis * scaleAmount) / 2;
+                if (moveType == MoveType.Move)
+                {
+                    projectedAxis = (mousePosition - previousMousePosition).normalized;
+                    float moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
+                    emptyTarget.Translate(projectedAxis * moveAmount, Space.World);
+                }
+                else
+                {
+                    Vector3 projected = projectedAxis;
+                    float scaleAmount =
+                        ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) *
+                        scaleSpeedMultiplier;
+                    var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
+                    emptyTarget.localScale += (positive * scaleAmount);
+                    emptyTarget.position += (axis * scaleAmount) / 2;
+                }
             }
-            previousMousePosition = mousePosition;
 
+            previousMousePosition = mousePosition;
             yield return null;
         }
+        emptyTarget.localScale = target.localScale;
+        isTransforming = false;
     }
 
     private static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles) {
