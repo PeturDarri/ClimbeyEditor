@@ -20,9 +20,9 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.3323962, g: 0.35068655, b: 0.3897059, a: 1}
-  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientSkyColor: {r: 1, g: 1, b: 1, a: 1}
+  m_AmbientEquatorColor: {r: 0.5147059, g: 0.5147059, b: 0.5147059, a: 1}
+  m_AmbientGroundColor: {r: 0.03676468, g: 0.03676468, b: 0.03676468, a: 1}
   m_AmbientIntensity: 1.13
   m_AmbientMode: 1
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
@@ -133,7 +133,9 @@ MonoBehaviour:
   SetRotateType: 101
   SetScaleType: 114
   SetSpaceToggle: 120
+  isTransforming: 0
   target: {fileID: 0}
+  emptySelection: {fileID: 0}
 --- !u!92 &121593702
 Behaviour:
   m_ObjectHideFlags: 0
@@ -230,7 +232,7 @@ MonoBehaviour:
   panSpeed: 0.25
   scrollSpeed: 10
   zoomMin: 2
-  zoomMax: 150
+  zoomMax: 2000
   distance: 10
   isActivated: 0
 --- !u!114 &121593708
@@ -442,7 +444,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08bfa84a66851d248b809596e423d601, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emptySelection: {fileID: 0}
+  Selection: []
+  emptySelection: {fileID: 1706494284}
 --- !u!1 &606099521
 GameObject:
   m_ObjectHideFlags: 0
@@ -609,6 +612,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 445054838}
+  - {fileID: 1706494284}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -623,6 +627,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac38ddfcd98840945ac62b1bb6fe2bec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PrefabBlocks:
+  - Prefab: {fileID: 1191477558950338, guid: 4827f22c60fb6f04f9fa8abdc2b8cbb7, type: 2}
+  - Prefab: {fileID: 1112763861798420, guid: ec2628f2c7b962241a67e2d2a29f18ae, type: 2}
+  - Prefab: {fileID: 1112763861798420, guid: 2c1b04572048e764ab037a4370415bd7, type: 2}
+  - Prefab: {fileID: 1112763861798420, guid: db90dc00a342b344c833c322e7353f92, type: 2}
   mainLevel:
     LevelArray: []
     MovingArray: []
@@ -1924,6 +1933,34 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1670396888}
+--- !u!1 &1706494283
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1706494284}
+  m_Layer: 0
+  m_Name: emptySelection
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1706494284
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1706494283}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 741561115}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1996423914
 GameObject:
   m_ObjectHideFlags: 0

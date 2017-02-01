@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using RuntimeGizmos;
 
 public class GridManager: MonoBehaviour
 {
@@ -12,7 +14,15 @@ public class GridManager: MonoBehaviour
     public float SnapValueY = 1;
     public float SnapValueZ = 1;
     public float SnapValueRot = 15;
-    private Transform emptySelection;
+    private Transform select;
+
+    //Events
+    //Events
+    public delegate void GridEvent();
+
+    public event GridEvent GridDisabled;
+
+    public event GridEvent OnSnap;
 
     private void Awake()
     {
@@ -23,33 +33,52 @@ public class GridManager: MonoBehaviour
         else if (instance != this)
         {
             Destroy(gameObject);
-
         }
-
-        emptySelection = SelectionManager.instance.transform;
     }
 
-    public void Update()
+    private void Start()
     {
-        emptySelection = SelectionManager.instance.transform;
+        select = SelectionManager.instance.transform;
+    }
 
+    private void Update()
+    {
         if ( DoSnap
              && !SelectionManager.instance.isEmpty
-             && (emptySelection.position != prevPosition || emptySelection.eulerAngles != prevRotation) )
+             && (select.position != prevPosition || select.eulerAngles != prevRotation) )
         {
             AutoSnap();
-            prevPosition = emptySelection.position;
-            prevRotation = emptySelection.eulerAngles;
+            prevPosition = select.position;
+            prevRotation = select.eulerAngles;
+        }
+
+        DoSnap = Camera.main.GetComponent<TransformGizmo>().isTransforming;
+        if (DoSnap)
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                DoSnap = false;
+            }
+        }
+        else
+        {
+            if (GridDisabled != null)
+            {
+                GridDisabled();
+            }
         }
     }
 
-    private void AutoSnap()
+    public void AutoSnap()
     {
+        //Update the selection
+        SelectionManager.instance.TransformSelection();
+
         //Get the selection bounds
         var bounds = SelectionManager.instance.SelectBounds;
+        bounds.center = SelectionManager.instance.transform.position;
 
         // Snap the max
-        bounds.center = emptySelection.position;
         Vector3 t = bounds.max;
         t.x = SnapRound( t.x, SnapValueX );
         t.y = SnapRound( t.y, SnapValueY );
@@ -69,20 +98,25 @@ public class GridManager: MonoBehaviour
         size.z = Mathf.Clamp(size.z, SnapValueZ, float.MaxValue);
         bounds.size = size;
 
-        emptySelection.position = bounds.center;
-        emptySelection.localScale = bounds.size;
+        select.position = bounds.center;
+        select.localScale = bounds.size;
+        Debug.Log("Changing scale to " + bounds.size);
 
         //Rotation snap
-        Vector3 r = emptySelection.eulerAngles;
+        Vector3 r = select.eulerAngles;
         r.x = SnapRound( r.x, SnapValueRot ) % 360.0f;
         r.y = SnapRound( r.y, SnapValueRot ) % 360.0f;
         r.z = SnapRound( r.z, SnapValueRot ) % 360.0f;
-        emptySelection.eulerAngles = r;
+        select.eulerAngles = r;
+
+        if (OnSnap != null)
+        {
+            OnSnap();
+        }
     }
 
     private float SnapRound( float input, float snapValue )
     {
-
         return snapValue * Mathf.Round((input / snapValue));
     }
 }

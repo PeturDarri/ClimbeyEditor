@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
-using Level;
 using RuntimeGizmos;
 
 public class SelectionManager : MonoBehaviour
@@ -13,20 +12,16 @@ public class SelectionManager : MonoBehaviour
 
     public static SelectionManager instance;
 
-    private List<LevelObject> _selection;
-    public List<LevelObject> Selection
-    {
-        get { return GetSelection(); }
-        private set { _selection = value; }
-    }
+    public List<LevelObject> Selection;
+    public Transform emptySelection;
 
     public bool isEmpty
     {
-        get { return GetSelection().Count < 1; }
+        get { return Selection.Count < 1; }
     }
 
-    public Transform emptySelection;
-    private Vector3 posOffset, rotOffset, sizeOffset;
+    private Vector3 prevPos, prevSize, prevRot;
+    private bool centerChanged;
 
     public Bounds SelectBounds
     {
@@ -36,6 +31,7 @@ public class SelectionManager : MonoBehaviour
     //Events
     public delegate void OnSelectionChangedEvent();
     public event OnSelectionChangedEvent OnSelectionChanged;
+
 
     private void Awake()
     {
@@ -54,14 +50,39 @@ public class SelectionManager : MonoBehaviour
             emptySelection = new GameObject("emptySelection").transform;
         }
 
-        _selection = GetComponentsInChildren<LevelObject>().ToList();
-        Selection = GetComponentsInChildren<LevelObject>().ToList();
+        Selection = new List<LevelObject>();
+
+        prevPos = Vector3.one;
+        prevRot = Vector3.one;
+        prevRot = Vector3.one;
+
+        OnSelectionChanged += SelectionChanged;
+    }
+
+    private void Start()
+    {
+        GridManager.instance.GridDisabled += GridDisabled;
+        GridManager.instance.OnSnap += Snap;
+    }
+
+    private void SelectionChanged()
+    {
+        CenterSelf();
     }
 
     private void Update()
     {
+        UpdateTransform();
         SelectionHotkeys();
-        TransformSelection();
+        if (!isEmpty)
+        {
+            TransformSelection();
+        }
+    }
+
+    private void LateUpdate()
+    {
+
     }
 
     public void SetSelection(Transform levelObject)
@@ -76,22 +97,16 @@ public class SelectionManager : MonoBehaviour
                     //Add to selection
 
                     //Save current list
-                    var oldList = GetSelection();
-                    ClearSelection();
-                    oldList.Add(levelObject.GetComponent<LevelObject>());
-
-                    SetMultiSelection(oldList);
+                    Selection.Add(levelObject.GetComponent<LevelObject>());
                 }
                 else if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift))
                 {
                     //Remove from selection
-                    RemoveFromSelection(levelObject.GetComponent<LevelObject>());
+                    Selection.Remove(levelObject.GetComponent<LevelObject>());
                 }
                 else
                 {
                     ClearSelection();
-
-                    CenterSelf(levelObject.GetComponent<LevelObject>());
                     //Set object as selection
                     AddToSelection(levelObject.GetComponent<LevelObject>());
                 }
@@ -113,51 +128,44 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private List<LevelObject> GetSelection()
+    private void GridDisabled()
     {
-        UpdateSelection();
-        return _selection;
+        emptySelection.position = transform.position;
+        emptySelection.rotation = transform.rotation;
+        emptySelection.localScale = transform.localScale;
+    }
+
+    private void Snap()
+    {
+        TransformSelection();
     }
 
     private void ClearSelection()
     {
+        Selection.Clear();
+    }
 
-        //Remove current selection
-        foreach (var lvlObject in GetSelection())
-        {
-            //Set it to parent of SelectionManager (Level GameObject)
-            RemoveFromSelection(lvlObject);
-        }
-        Debug.Log("clear");
-        emptySelection.rotation = Quaternion.identity;
+    private void ResetPrev()
+    {
+        prevPos = transform.position;
+        prevRot = transform.eulerAngles;
+        prevSize = transform.localScale;
+    }
+
+    private void CenterSelf()
+    {
+        //Set parent position to center of all children
+        var bounds = GetBounds();
+        //transform.localScale = bounds.size;
+        transform.position = transform.position + bounds.center;
+        transform.localScale = bounds.size;
         transform.rotation = Quaternion.identity;
-    }
-
-    private void UpdateSelection()
-    {
-        Selection = GetComponentsInChildren<LevelObject>().ToList();
-    }
-
-    private void CenterSelf(List<LevelObject> objList = null)
-    {
-
-        //Set parent position to center of all children
-        var bounds = GetBounds(objList);
-        transform.localScale = bounds.size;
+        emptySelection.position = emptySelection.position + bounds.center;
         emptySelection.localScale = bounds.size;
-        transform.position = transform.position + bounds.center;
-        emptySelection.position = transform.position + bounds.center;
-    }
+        emptySelection.rotation = Quaternion.identity;
+        ResetPrev();
 
-    private void CenterSelf(LevelObject obj)
-    {
-        //Set parent position to center of all children
-        var objList = new List<LevelObject> {obj};
-        var bounds = GetBounds(objList);
-        transform.localScale = bounds.size;
-        emptySelection.localScale = bounds.size;
-        transform.position = transform.position + bounds.center;
-        emptySelection.position = transform.position + bounds.center;
+        centerChanged = true;
     }
 
     private void SelectionHotkeys()
@@ -186,6 +194,10 @@ public class SelectionManager : MonoBehaviour
             {
                 LevelManager.instance.SaveLevel("Itsa me");
             }
+            else if (Input.GetKeyDown(KeyCode.O))
+            {
+                LevelManager.instance.LoadLevel("Itsa me.txt");
+            }
         }
         else
         {
@@ -211,7 +223,7 @@ public class SelectionManager : MonoBehaviour
     {
         if (!isEmpty)
         {
-            var dupeList = GetSelection();
+            var dupeList = Selection.ToList();
             ClearSelection();
             var newList = new List<LevelObject>();
             foreach (var dupe in dupeList)
@@ -219,6 +231,7 @@ public class SelectionManager : MonoBehaviour
                 var newObj = Instantiate(dupe);
                 newObj.name = dupe.name;
                 newObj.transform.position = dupe.transform.position;
+                newObj.transform.parent = LevelManager.instance.transform;
                 newList.Add(newObj);
             }
             SetMultiSelection(newList);
@@ -234,15 +247,6 @@ public class SelectionManager : MonoBehaviour
     {
         if (objList.Count > 0)
         {
-            //Get all positions of children to list
-            List<Vector3> posList = new List<Vector3>();
-            foreach (var obj in objList)
-            {
-                posList.Add(obj.transform.position);
-            }
-
-            CenterSelf(objList);
-
             //Set all objects as children of parent
             foreach (var obj in objList)
             {
@@ -251,31 +255,28 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private Bounds GetBounds(List<LevelObject> children = null)
+    private Bounds GetBounds()
     {
-        if (children == null)
+        var children = Selection.ToList();
+        if (children.Count == 0)
         {
-            children = GetSelection();
-            if (children.Count == 0)
-            {
-                return new Bounds();
-            }
+            return new Bounds();
         }
-        var currentRotation = transform.rotation;
-        transform.rotation = Quaternion.Euler(0f,0f,0f);
 
         var bounds = new Bounds(children[0].transform.position, Vector3.zero);
 
         foreach(var child in children)
         {
+            //Reset rotation
+            var curRot = child.transform.rotation;
+            child.transform.rotation = Quaternion.identity;
             var render = child.GetComponent<Renderer>();
             bounds.Encapsulate(render.bounds);
+            child.transform.rotation = curRot;
         }
 
         var localCenter = bounds.center - transform.position;
         bounds.center = localCenter;
-
-        transform.rotation = currentRotation;
 
         return bounds;
     }
@@ -299,27 +300,17 @@ public class SelectionManager : MonoBehaviour
             parent = levelObject.transform.parent.GetComponent<LevelObject>();
         }
 
-        levelObject.transform.parent = transform;
+        Selection.Add(levelObject);
         levelObject.SetSelection(true);
-
-        emptySelection.position = transform.position;
-    }
-
-    private void RemoveFromSelection(LevelObject levelObject)
-    {
-        if (levelObject.transform.parent == transform)
-        {
-            levelObject.transform.parent = transform.parent;
-            levelObject.SetSelection(false);
-        }
     }
 
     private void DeleteSelection()
     {
-        var oldList = GetSelection();
+        var oldList = Selection.ToList();
         ClearSelection();
         foreach (var obj in oldList)
         {
+            Selection.Remove(obj);
             Destroy(obj.gameObject);
             //Debug.Log("Destroy!");
         }
@@ -332,7 +323,6 @@ public class SelectionManager : MonoBehaviour
 
     private void SelectAll()
     {
-        ClearSelection();
         SetMultiSelection(LevelManager.instance.LevelObjects);
 
         if (OnSelectionChanged != null)
@@ -341,10 +331,32 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private void TransformSelection()
+    private void UpdateTransform()
     {
         transform.position = emptySelection.position;
-        transform.localScale = emptySelection.localScale;
         transform.rotation = emptySelection.rotation;
+        transform.localScale = emptySelection.localScale;
+    }
+
+    public void TransformSelection()
+    {
+        if (centerChanged)
+        {
+            centerChanged = false;
+        }
+        else
+        {
+            var selection = Selection.ToList();
+            foreach (var child in selection)
+            {
+                child.transform.eulerAngles += transform.eulerAngles - prevRot;
+                child.transform.localScale += transform.localScale - prevSize;
+                child.transform.position += transform.position - prevPos;
+            }
+        }
+
+        prevRot = transform.eulerAngles;
+        prevSize = transform.localScale;
+        prevPos = transform.position;
     }
 }

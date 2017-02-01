@@ -69,7 +69,7 @@ public class MouseOrbit : MonoBehaviour
             if (Input.GetAxis("Mouse ScrollWheel") != 0)
             {
                 // get mouse wheel info to zoom in and out
-                distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel")*scrollSpeed, 0, zoomMax);
+                distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel")* (scrollSpeed * (distance / 20)), 0, zoomMax);
                 if (distance < zoomMin)
                 {
                     target += transform.forward;

@@ -41,14 +41,14 @@ namespace RuntimeGizmos
         AxisVectors circlesLines = new AxisVectors();
         AxisVectors drawCurrentCirclesLines = new AxisVectors();
 
-        bool isTransforming;
+        public bool isTransforming;
         float totalScaleAmount;
         Quaternion totalRotationAmount;
         Axis selectedAxis = Axis.None;
         AxisInfo axisInfo;
 
         public Transform target;
-        private Transform realTarget;
+        public Transform emptySelection;
         Camera myCamera;
         private Vector3 prevMouse = Vector3.zero;
 
@@ -161,7 +161,7 @@ namespace RuntimeGizmos
             else
             {
                 target = SelectionManager.instance.transform;
-                realTarget = SelectionManager.instance.emptySelection;
+                emptySelection = SelectionManager.instance.emptySelection;
             }
         }
 
@@ -187,7 +187,7 @@ namespace RuntimeGizmos
                     if(type == TransformType.Move)
                     {
                         float moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
-                        realTarget.Translate(axis * moveAmount, Space.World);
+                        emptySelection.Translate(axis * moveAmount, Space.World);
                     }
 
                     if(type == TransformType.Scale)
@@ -195,10 +195,10 @@ namespace RuntimeGizmos
                         Vector3 projected = (selectedAxis == Axis.Any) ? transform.right : projectedAxis;
                         float scaleAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) * scaleSpeedMultiplier;
 
-                        Vector3 localAxis = (space == TransformSpace.Local && selectedAxis != Axis.Any) ? realTarget.InverseTransformDirection(axis) : axis;
+                        Vector3 localAxis = (space == TransformSpace.Local && selectedAxis != Axis.Any) ? emptySelection.InverseTransformDirection(axis) : axis;
 
-                        if(selectedAxis == Axis.Any) realTarget.localScale += (ExtVector3.Abs(realTarget.localScale.normalized) * scaleAmount);
-                        else realTarget.localScale += (localAxis * scaleAmount);
+                        if(selectedAxis == Axis.Any) emptySelection.localScale += (ExtVector3.Abs(emptySelection.localScale.normalized) * scaleAmount);
+                        else emptySelection.localScale += (localAxis * scaleAmount);
 
                         totalScaleAmount += scaleAmount;
                     }
@@ -208,12 +208,12 @@ namespace RuntimeGizmos
                         if(selectedAxis == Axis.Any)
                         {
                             Vector3 rotation = transform.TransformDirection(new Vector3(Input.GetAxis("Mouse Y"), -Input.GetAxis("Mouse X"), 0));
-                            realTarget.Rotate(rotation * allRotateSpeedMultiplier, Space.World);
+                            emptySelection.Rotate(rotation * allRotateSpeedMultiplier, Space.World);
                             totalRotationAmount *= Quaternion.Euler(rotation * allRotateSpeedMultiplier);
                         }else{
                             Vector3 projected = (selectedAxis == Axis.Any || ExtVector3.IsParallel(axis, planeNormal)) ? planeNormal : Vector3.Cross(axis, planeNormal);
                             float rotateAmount = (ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) * rotateSpeedMultiplier) / GetDistanceMultiplier();
-                            realTarget.Rotate(axis, rotateAmount, Space.World);
+                            emptySelection.Rotate(axis, rotateAmount, Space.World);
                             totalRotationAmount *= Quaternion.Euler(axis * rotateAmount);
                         }
                     }

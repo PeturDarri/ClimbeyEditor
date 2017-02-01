@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.AccessControl;
 using RuntimeGizmos;
 using UnityEngine;
 
@@ -27,7 +25,6 @@ public class SelectBounds : MonoBehaviour
     private float minHandleDistance = 8;
     private float moveSpeedMultiplier = 1;
     private float scaleSpeedMultiplier = 1;
-    private bool isTransforming;
     private enum MoveType
     {
         Stretch,
@@ -51,7 +48,8 @@ public class SelectBounds : MonoBehaviour
         if (!ShowHandles)
             return;
         //Draw handles
-        var sortedHandles = handles.OrderBy(o=>Vector3.Distance(select.position + o, Camera.main.transform.position)).ToList();
+        var sortedHandles = handles.OrderBy(o => Vector3.Distance(o, Camera.main.transform.position))
+            .ToList();
         sortedHandles.Reverse();
 
         for (int i = 0; i < sortedHandles.Count; i++)
@@ -60,35 +58,33 @@ public class SelectBounds : MonoBehaviour
 
             if (handle == Vector3.zero)
                 break;
-            var handlePos = Camera.main.WorldToScreenPoint(select.position + handle);
+            var handlePos = Camera.main.WorldToScreenPoint(handle);
             handlePos.y = Screen.height - handlePos.y;
             var pos = new Rect(new Vector2(handlePos.x - 4, handlePos.y - 4), new Vector2(8, 8));
-            GUI.color = new Color(1, 1, 1, 1 * ((float)(i+1) / sortedHandles.Count));
+            GUI.color = new Color(1, 1, 1, 1 * ((float) (i + 1) / sortedHandles.Count));
             GUI.DrawTexture(pos, HandleTexture);
         }
     }
 
-    // Update is called once per frame
-	private void Update()
-	{
-
-	}
-
-    private void LateUpdate()
+    private void Update()
     {
-        ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds;
+        ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds && !SelectionManager.instance.isEmpty;
         transformSpace = GetComponent<TransformGizmo>().space;
 
-        if (ShowBounds)
-        {
-            UpdateBounds();
-        }
         if (ShowHandles)
         {
             UpdateHandles();
-            if (!isTransforming)
+            if (!GetComponent<TransformGizmo>().isTransforming)
                 GetHandle();
             ScaleHandle();
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (ShowBounds)
+        {
+            UpdateBounds();
         }
     }
 
@@ -111,12 +107,12 @@ public class SelectBounds : MonoBehaviour
     {
         //Calculate handle locations
         handles.Clear();
-        handles.Add(RotatePointAroundPivot(new Vector3(0, 0, bounds.extents.z), select.position, select.eulerAngles));
-        handles.Add(RotatePointAroundPivot(new Vector3(0, 0, -bounds.extents.z), select.position, select.eulerAngles));
-        handles.Add(RotatePointAroundPivot(new Vector3(bounds.extents.x, 0, 0), select.position, select.eulerAngles));
-        handles.Add(RotatePointAroundPivot(new Vector3(-bounds.extents.x, 0, 0), select.position, select.eulerAngles));
-        handles.Add(RotatePointAroundPivot(new Vector3(0, bounds.extents.y, 0), select.position, select.eulerAngles));
-        handles.Add(RotatePointAroundPivot(new Vector3(0, -bounds.extents.y, 0), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(0, 0, bounds.extents.z), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(0, 0, -bounds.extents.z), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(bounds.extents.x, 0, 0), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(-bounds.extents.x, 0, 0), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(0, bounds.extents.y, 0), select.position, select.eulerAngles));
+        handles.Add(RotatePointAroundPivot(select.position + new Vector3(0, -bounds.extents.y, 0), select.position, select.eulerAngles));
     }
 
     private void GetHandle()
@@ -131,7 +127,7 @@ public class SelectBounds : MonoBehaviour
             var i = -1;
             foreach (var handle in handles)
             {
-                var distance = Vector2.Distance(Camera.main.WorldToScreenPoint(select.position + handle), mousePos);
+                var distance = Vector2.Distance(Camera.main.WorldToScreenPoint(handle), mousePos);
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
@@ -167,13 +163,13 @@ public class SelectBounds : MonoBehaviour
     IEnumerator ScaleHandleRoutine()
     {
         var target = select;
-        Vector3 originalTargetPosition = target.position;
-        Vector3 planeNormal = (transform.position - target.position).normalized;
-        Vector3 axis = selectedHandle.normalized;
-        Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
-        Vector3 previousMousePosition = Vector3.zero;
-        var emptyTarget = SelectionManager.instance.emptySelection;
-        isTransforming = true;
+        var originalTargetPosition = target.position;
+        var planeNormal = (transform.position - target.position).normalized;
+        var axis = (selectedHandle - target.position).normalized;
+        var projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
+        var previousMousePosition = Vector3.zero;
+        var emptySelection = SelectionManager.instance.emptySelection;
+        GetComponent<TransformGizmo>().isTransforming = true;
 
         while (!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
         {
@@ -187,7 +183,7 @@ public class SelectBounds : MonoBehaviour
                 {
                     projectedAxis = (mousePosition - previousMousePosition).normalized;
                     float moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
-                    emptyTarget.Translate(projectedAxis * moveAmount, Space.World);
+                    emptySelection.Translate(projectedAxis * moveAmount, Space.World);
                 }
                 else
                 {
@@ -196,16 +192,15 @@ public class SelectBounds : MonoBehaviour
                         ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) *
                         scaleSpeedMultiplier;
                     var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
-                    emptyTarget.localScale += (positive * scaleAmount);
-                    emptyTarget.position += (axis * scaleAmount) / 2;
+                    emptySelection.localScale += (positive * scaleAmount);
+                    emptySelection.position += (axis * scaleAmount) / 2;
                 }
             }
 
             previousMousePosition = mousePosition;
             yield return null;
         }
-        emptyTarget.localScale = target.localScale;
-        isTransforming = false;
+        GetComponent<TransformGizmo>().isTransforming = false;
     }
 
     private static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles) {

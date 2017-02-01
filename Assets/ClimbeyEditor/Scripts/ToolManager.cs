@@ -30,6 +30,7 @@ public class ToolManager : MonoBehaviour {
         obj.transform.position = CameraManager.instance.GetTarget();
         CameraManager.instance.SetTarget(obj.transform);
         obj.name = spawnObject.name;
+        obj.transform.parent = LevelManager.instance.transform;
         SelectionManager.instance.SetSelection(obj.transform);
         return obj;
     }
