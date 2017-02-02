@@ -2,7 +2,9 @@
 using System.Linq;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using UnityEngine;
+using SFB;
 
 public class LevelManager : MonoBehaviour
 {
@@ -160,14 +162,33 @@ public class LevelManager : MonoBehaviour
         ClearLists();
     }
 
-    public void LoadLevel(string levelFile)
+    public void LoadLevel(string levelFile = null)
     {
+        if (levelFile == null)
+        {
+            // Open file with filter
+            var extensions = new [] {
+                new ExtensionFilter("Text file", "txt"),
+                new ExtensionFilter("All Files", "*" ),
+            };
+            var path = StandaloneFileBrowser.OpenFilePanel("Load Level", "", extensions, false);
+            if (path.Any())
+            {
+                levelFile = path[0];
+            }
+            else
+            {
+                Debug.LogError("No level file provided");
+                return;
+            }
+        }
         var loadedLevel = new Level();
         JsonUtility.FromJsonOverwrite(File.ReadAllText(levelFile), loadedLevel);
 
         foreach (var block in loadedLevel.LevelArray)
         {
             var singleOrDefault = PrefabBlocks.SingleOrDefault(x => x.Prefab.name == block.Type);
+            if (singleOrDefault == null) continue;
             var prefab = singleOrDefault.Prefab ?? PrefabBlocks[0].Prefab;
 
             var newBlock = Instantiate(prefab);

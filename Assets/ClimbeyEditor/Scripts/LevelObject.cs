@@ -6,15 +6,24 @@ using UnityEngine.UI;
 public class LevelObject : MonoBehaviour
 {
     public bool LockX, LockY, LockZ;
+    public bool IsSelected;
 
     public virtual LevelManager.Block GetBlock(bool x, bool y, bool z)
     {
         return new LevelManager.Block();
     }
 
-    public void SetSelection(bool selected)
+    public override bool Equals(object obj)
     {
-        //Select
+        if(obj == null)return false;
+        LevelObject other = obj as LevelObject;
+        if(other == null)return false;
+        return other.gameObject.GetInstanceID() == gameObject.GetInstanceID();
+    }
+
+    public override int GetHashCode()
+    {
+        return gameObject.GetInstanceID();
     }
 }
 

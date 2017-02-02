@@ -21,12 +21,15 @@ public class SelectionManager : MonoBehaviour
     }
 
     private Vector3 prevPos, prevSize, prevRot;
-    private bool centerChanged;
+    private bool centerChanged, isDragging, shouldDrawBox;
+    private Vector3 prevMouse, mousePos;
+    public Texture selectionBox;
 
-    public Bounds SelectBounds
+    public bool isTransforming
     {
-        get { return GetBounds(); }
+        get { return Camera.main.GetComponent<TransformGizmo>().isTransforming; }
     }
+
 
     //Events
     public delegate void OnSelectionChangedEvent();
@@ -72,50 +75,40 @@ public class SelectionManager : MonoBehaviour
 
     private void Update()
     {
-        UpdateTransform();
+        DragSelection();
         SelectionHotkeys();
-        if (!isEmpty)
-        {
-            TransformSelection();
-        }
-    }
-
-    private void LateUpdate()
-    {
-
+        if (!isTransforming) return;
+        TransformSelection();
+        UpdateTransform();
     }
 
     public void SetSelection(Transform levelObject)
     {
         if (levelObject != null)
         {
-            if (levelObject.GetComponent<LevelObject>() != null)
+            if (levelObject.GetComponent<LevelObject>() == null) return;
+            if (Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftShift))
             {
-                //Set selection
-                if (Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftShift))
-                {
-                    //Add to selection
-
-                    //Save current list
-                    Selection.Add(levelObject.GetComponent<LevelObject>());
-                }
-                else if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift))
-                {
-                    //Remove from selection
-                    Selection.Remove(levelObject.GetComponent<LevelObject>());
-                }
-                else
-                {
-                    ClearSelection();
-                    //Set object as selection
-                    AddToSelection(levelObject.GetComponent<LevelObject>());
-                }
-
-                if (OnSelectionChanged != null)
-                {
-                    OnSelectionChanged();
-                }
+                //Add to selection
+                AddToSelection(levelObject.GetComponent<LevelObject>());
             }
+            else if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift))
+            {
+                //Remove from selection
+                Selection.Remove(levelObject.GetComponent<LevelObject>());
+            }
+            else
+            {
+                ClearSelection();
+                //Set object as selection
+                AddToSelection(levelObject.GetComponent<LevelObject>());
+            }
+
+            if (OnSelectionChanged != null)
+            {
+                OnSelectionChanged();
+            }
+            //Set selection
         }
         else
         {
@@ -159,13 +152,18 @@ public class SelectionManager : MonoBehaviour
         //transform.localScale = bounds.size;
         transform.position = transform.position + bounds.center;
         transform.localScale = bounds.size;
-        transform.rotation = Quaternion.identity;
+        transform.eulerAngles = GetChildRotation();
         emptySelection.position = emptySelection.position + bounds.center;
         emptySelection.localScale = bounds.size;
-        emptySelection.rotation = Quaternion.identity;
+        emptySelection.eulerAngles = GetChildRotation();
         ResetPrev();
 
         centerChanged = true;
+    }
+
+    private Vector3 GetChildRotation()
+    {
+        return Selection.Count > 0 ? Selection.Count > 1 ? Vector3.zero : Selection[0].transform.eulerAngles : Vector3.zero;
     }
 
     private void SelectionHotkeys()
@@ -192,11 +190,11 @@ public class SelectionManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.S))
             {
-                LevelManager.instance.SaveLevel("Itsa me");
+
             }
             else if (Input.GetKeyDown(KeyCode.O))
             {
-                LevelManager.instance.LoadLevel("Itsa me.txt");
+                LevelManager.instance.LoadLevel();
             }
         }
         else
@@ -215,6 +213,14 @@ public class SelectionManager : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.Delete))
             {
                 DeleteSelection();
+            }
+            else if (Input.GetKeyDown(KeyCode.KeypadPlus))
+            {
+                GridManager.instance.DoubleHalveGrid(true);
+            }
+            else if (Input.GetKeyDown(KeyCode.KeypadMinus))
+            {
+                GridManager.instance.DoubleHalveGrid(false);
             }
         }
     }
@@ -255,7 +261,7 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private Bounds GetBounds()
+    public Bounds GetBounds(bool local = false)
     {
         var children = Selection.ToList();
         if (children.Count == 0)
@@ -269,7 +275,7 @@ public class SelectionManager : MonoBehaviour
         {
             //Reset rotation
             var curRot = child.transform.rotation;
-            child.transform.rotation = Quaternion.identity;
+            child.transform.rotation = (local) ? Quaternion.identity : curRot;
             var render = child.GetComponent<Renderer>();
             bounds.Encapsulate(render.bounds);
             child.transform.rotation = curRot;
@@ -283,6 +289,7 @@ public class SelectionManager : MonoBehaviour
 
     private void AddToSelection(LevelObject levelObject)
     {
+        if (Selection.Contains(levelObject)) return;
         //Check if current LevelObject is a child of another LevelObject
         LevelObject parent;
         try
@@ -301,7 +308,7 @@ public class SelectionManager : MonoBehaviour
         }
 
         Selection.Add(levelObject);
-        levelObject.SetSelection(true);
+        levelObject.IsSelected = true;
     }
 
     private void DeleteSelection()
@@ -358,5 +365,82 @@ public class SelectionManager : MonoBehaviour
         prevRot = transform.eulerAngles;
         prevSize = transform.localScale;
         prevPos = transform.position;
+    }
+
+    private void DragSelection()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            prevMouse = mousePos;
+            isDragging = true;
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+            if (Vector2.Distance(mousePos, prevMouse) > 10 && CameraManager.instance.cameraState == CameraManager.CameraState.Free && !isTransforming)
+            {
+                shouldDrawBox = true;
+            }
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            var box = FromDragPoints(prevMouse, mousePos);
+            if (isDragging && shouldDrawBox)
+            {
+                SelectDrag(box);
+            }
+            isDragging = false;
+            shouldDrawBox = false;
+        }
+    }
+
+    private void OnGUI()
+    {
+        mousePos = Event.current.mousePosition;
+        //Draw selection box
+        if (!isDragging || !shouldDrawBox) return;
+        var box = FromDragPoints(prevMouse, mousePos);
+        GUI.color = new Color32(66, 134, 244, 50);
+        GUI.DrawTexture(box, selectionBox);
+    }
+
+    private void SelectDrag(Rect box)
+    {
+        var selected = new List<LevelObject>();
+
+        foreach (var child in LevelManager.instance.LevelObjects)
+        {
+            var point = CameraManager.instance.Camera.WorldToScreenPoint(child.transform.position);
+            point.y = Mathf.Abs(point.y - Screen.height);
+
+            if (box.Contains(point))
+            {
+                selected.Add(child);
+            }
+        }
+
+        Debug.Log(selected.Count);
+
+        ClearSelection();
+        SetMultiSelection(selected);
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
+        }
+    }
+
+    private Rect FromDragPoints(Vector2 p1, Vector2 p2)
+    {
+        var d = p1 - p2;
+        var r = new Rect
+        {
+            x = d.x < 0 ? p1.x : p2.x,
+            y = d.y < 0 ? p1.y : p2.y,
+            width = Mathf.Abs(d.x),
+            height = Mathf.Abs(d.y)
+        };
+        return r;
     }
 }

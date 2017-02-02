@@ -7,12 +7,9 @@ public class GridManager: MonoBehaviour
     public static GridManager instance;
 
     // Vars
-    private Vector3 prevPosition;
-    private Vector3 prevRotation;
+    private Vector3 prevPosition, prevRotation, prevSize;
     public bool DoSnap = true;
-    public float SnapValueX = 1;
-    public float SnapValueY = 1;
-    public float SnapValueZ = 1;
+    public float SnapValue = 0.5f;
     public float SnapValueRot = 15;
     private Transform select;
 
@@ -45,11 +42,12 @@ public class GridManager: MonoBehaviour
     {
         if ( DoSnap
              && !SelectionManager.instance.isEmpty
-             && (select.position != prevPosition || select.eulerAngles != prevRotation) )
+             && (select.position != prevPosition || select.eulerAngles != prevRotation || select.localScale != prevSize))
         {
             AutoSnap();
             prevPosition = select.position;
             prevRotation = select.eulerAngles;
+            prevSize = select.localScale;
         }
 
         DoSnap = Camera.main.GetComponent<TransformGizmo>().isTransforming;
@@ -75,32 +73,31 @@ public class GridManager: MonoBehaviour
         SelectionManager.instance.TransformSelection();
 
         //Get the selection bounds
-        var bounds = SelectionManager.instance.SelectBounds;
+        var bounds = SelectionManager.instance.GetBounds(true);
         bounds.center = SelectionManager.instance.transform.position;
 
         // Snap the max
         Vector3 t = bounds.max;
-        t.x = SnapRound( t.x, SnapValueX );
-        t.y = SnapRound( t.y, SnapValueY );
-        t.z = SnapRound( t.z, SnapValueZ );
+        t.x = SnapRound( t.x, SnapValue );
+        t.y = SnapRound( t.y, SnapValue );
+        t.z = SnapRound( t.z, SnapValue );
 
         Vector3 tm = bounds.min;
-        tm.x = SnapRound( tm.x, SnapValueX );
-        tm.y = SnapRound( tm.y, SnapValueY );
-        tm.z = SnapRound( tm.z, SnapValueZ );
+        tm.x = SnapRound( tm.x, SnapValue );
+        tm.y = SnapRound( tm.y, SnapValue );
+        tm.z = SnapRound( tm.z, SnapValue );
 
         bounds.SetMinMax(tm, t);
 
         //Keep sizes from being zero
         Vector3 size = bounds.size;
-        size.x = Mathf.Clamp(size.x, SnapValueX, float.MaxValue);
-        size.y = Mathf.Clamp(size.y, SnapValueY, float.MaxValue);
-        size.z = Mathf.Clamp(size.z, SnapValueZ, float.MaxValue);
+        size.x = Mathf.Clamp(size.x, SnapValue, float.MaxValue);
+        size.y = Mathf.Clamp(size.y, SnapValue, float.MaxValue);
+        size.z = Mathf.Clamp(size.z, SnapValue, float.MaxValue);
         bounds.size = size;
 
         select.position = bounds.center;
         select.localScale = bounds.size;
-        Debug.Log("Changing scale to " + bounds.size);
 
         //Rotation snap
         Vector3 r = select.eulerAngles;
@@ -118,5 +115,10 @@ public class GridManager: MonoBehaviour
     private float SnapRound( float input, float snapValue )
     {
         return snapValue * Mathf.Round((input / snapValue));
+    }
+
+    public void DoubleHalveGrid(bool doDouble)
+    {
+        SnapValue = doDouble ? SnapValue * 2 : SnapValue / 2;
     }
 }

@@ -446,6 +446,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Selection: []
   emptySelection: {fileID: 1706494284}
+  selectionBox: {fileID: 2800000, guid: 9a1e0d9af1f561c4284f6e324ac4ab34, type: 3}
 --- !u!1 &606099521
 GameObject:
   m_ObjectHideFlags: 0
@@ -677,9 +678,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DoSnap: 1
-  SnapValueX: 0.25
-  SnapValueY: 0.25
-  SnapValueZ: 0.25
+  SnapValue: 0.5
   SnapValueRot: 15
 --- !u!1 &749175291
 GameObject:

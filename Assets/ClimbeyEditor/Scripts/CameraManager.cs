@@ -7,6 +7,11 @@ public class CameraManager : MonoBehaviour
     public CameraState cameraState;
     private MouseOrbit orbitScript;
 
+    public Camera Camera
+    {
+        get { return instance.GetComponent<Camera>(); }
+    }
+
     public enum CameraState {Free, Orbit, Pan, Fly}
 
     // Use this for initialization

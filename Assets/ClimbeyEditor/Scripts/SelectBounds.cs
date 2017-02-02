@@ -15,7 +15,6 @@ public class SelectBounds : MonoBehaviour
 
     private Bounds bounds;
     private TransformSpace transformSpace = TransformSpace.Global;
-    private Vector3 bLeft1, tLeft1, bRight1, tRight1, bLeft2, tLeft2, bRight2, tRight2;
     private Vector3 localRotation;
 
     //Handles
@@ -25,6 +24,7 @@ public class SelectBounds : MonoBehaviour
     private float minHandleDistance = 8;
     private float moveSpeedMultiplier = 1;
     private float scaleSpeedMultiplier = 1;
+    private bool symmetrical;
     private enum MoveType
     {
         Stretch,
@@ -71,6 +71,8 @@ public class SelectBounds : MonoBehaviour
         ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds && !SelectionManager.instance.isEmpty;
         transformSpace = GetComponent<TransformGizmo>().space;
 
+        symmetrical = Input.GetKey(KeyCode.LeftShift);
+
         if (ShowHandles)
         {
             UpdateHandles();
@@ -90,17 +92,7 @@ public class SelectBounds : MonoBehaviour
 
     private void UpdateBounds()
     {
-        bounds = SelectionManager.instance.SelectBounds;
-
-        //Calculate 8 corners and save
-        bLeft1 = new Vector3(-bounds.extents.x, -bounds.extents.y, -bounds.extents.z);
-        tLeft1 = new Vector3(-bounds.extents.x, +bounds.extents.y, -bounds.extents.z);
-        bRight1 = new Vector3(+bounds.extents.x, -bounds.extents.y, -bounds.extents.z);
-        tRight1 = new Vector3(+bounds.extents.x, +bounds.extents.y, -bounds.extents.z);
-        bLeft2 = new Vector3(-bounds.extents.x, -bounds.extents.y, +bounds.extents.z);
-        tLeft2 = new Vector3(-bounds.extents.x, +bounds.extents.y, +bounds.extents.z);
-        bRight2 = new Vector3(+bounds.extents.x, -bounds.extents.y, +bounds.extents.z);
-        tRight2 = new Vector3(+bounds.extents.x, +bounds.extents.y, +bounds.extents.z);
+        bounds = SelectionManager.instance.GetBounds(true);
     }
 
     private void UpdateHandles()
@@ -160,7 +152,7 @@ public class SelectBounds : MonoBehaviour
         }
     }
 
-    IEnumerator ScaleHandleRoutine()
+    private IEnumerator ScaleHandleRoutine()
     {
         var target = select;
         var originalTargetPosition = target.position;
@@ -173,8 +165,8 @@ public class SelectBounds : MonoBehaviour
 
         while (!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
         {
-            Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction,
+            var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction,
                 originalTargetPosition, planeNormal);
 
             if (previousMousePosition != Vector3.zero && mousePosition != Vector3.zero)
@@ -182,18 +174,27 @@ public class SelectBounds : MonoBehaviour
                 if (moveType == MoveType.Move)
                 {
                     projectedAxis = (mousePosition - previousMousePosition).normalized;
-                    float moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
+                    var moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
                     emptySelection.Translate(projectedAxis * moveAmount, Space.World);
                 }
                 else
                 {
-                    Vector3 projected = projectedAxis;
-                    float scaleAmount =
-                        ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) *
+                    axis = transformSpace == TransformSpace.Global ? axis : (RotatePointAroundPivot(selectedHandle, originalTargetPosition, -select.eulerAngles) - originalTargetPosition).normalized;
+                    projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
+                    var scaleAmount =
+                        ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) *
                         scaleSpeedMultiplier;
                     var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
                     emptySelection.localScale += (positive * scaleAmount);
-                    emptySelection.position += (axis * scaleAmount) / 2;
+
+                    if (!symmetrical)
+                    {
+                        emptySelection.position +=(selectedHandle - originalTargetPosition).normalized * scaleAmount / 2;
+                    }
+                    else
+                    {
+                        emptySelection.position = originalTargetPosition;
+                    }
                 }
             }
 
@@ -220,48 +221,70 @@ public class SelectBounds : MonoBehaviour
         if(ShowBounds && !SelectionManager.instance.isEmpty)
         {
             GL.Color(LineColor);
+            var selectBounds = bounds;
+            selectBounds.center = select.position;
+            DrawCube(selectBounds);
 
-            var center = SelectionManager.instance.transform.position;
-            //bLeft1
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft1), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight1), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight1), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft2), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight1), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft1), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft2), center, select.eulerAngles));
-
-            //tRight2
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight2), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft2), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tLeft2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft2), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + tRight1), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bLeft2), center, select.eulerAngles));
-
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight2), center, select.eulerAngles));
-            GL.Vertex(RotatePointAroundPivot(center + (bounds.center + bRight1), center, select.eulerAngles));
+            foreach (var child in SelectionManager.instance.Selection)
+            {
+                var childBounds = child.GetComponent<Renderer>().bounds;
+                DrawCube(childBounds, child.transform.eulerAngles);
+            }
         }
 
-
         GL.End();
+    }
+
+    private static void DrawCube(Bounds cube, Vector3 rotation = new Vector3())
+    {
+        //Calculate 8 corners and save
+        var bLeft1 = new Vector3(-cube.extents.x, -cube.extents.y, -cube.extents.z);
+        var tLeft1 = new Vector3(-cube.extents.x, +cube.extents.y, -cube.extents.z);
+        var bRight1 = new Vector3(+cube.extents.x, -cube.extents.y, -cube.extents.z);
+        var tRight1 = new Vector3(+cube.extents.x, +cube.extents.y, -cube.extents.z);
+        var bLeft2 = new Vector3(-cube.extents.x, -cube.extents.y, +cube.extents.z);
+        var tLeft2 = new Vector3(-cube.extents.x, +cube.extents.y, +cube.extents.z);
+        var bRight2 = new Vector3(+cube.extents.x, -cube.extents.y, +cube.extents.z);
+        var tRight2 = new Vector3(+cube.extents.x, +cube.extents.y, +cube.extents.z);
+
+        var center = cube.center;
+
+        //bLeft1
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft1, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight1, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight1, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft2, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight1, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft1, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft2, center, rotation));
+
+        //tRight2
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight2, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft2, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + tLeft2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft2, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + tRight1, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bLeft2, center, rotation));
+
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight2, center, rotation));
+        GL.Vertex(RotatePointAroundPivot(cube.center + bRight1, center, rotation));
     }
 }
