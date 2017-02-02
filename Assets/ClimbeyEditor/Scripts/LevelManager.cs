@@ -135,7 +135,7 @@ public class LevelManager : MonoBehaviour
 
     }
 
-    public void SaveLevel(string levelName, string path = "")
+    public void SaveLevel(string levelName = "")
     {
         if (OnSave != null)
         {
@@ -158,13 +158,19 @@ public class LevelManager : MonoBehaviour
             GroupsArray = Groups.ToArray()
         };
 
-        File.WriteAllText(path + levelName + ".txt", JsonUtility.ToJson(mainLevel, false));
+        // Open file with filter
+        var extensions = new [] {
+            new ExtensionFilter("Text file", "txt"),
+            new ExtensionFilter("All Files", "*" ),
+        };
+        var browser = StandaloneFileBrowser.SaveFilePanel("Save Level", "", "level.txt", extensions);
+        File.WriteAllText(browser, JsonUtility.ToJson(mainLevel, false));
         ClearLists();
     }
 
     public void LoadLevel(string levelFile = null)
     {
-        if (levelFile == null)
+        if (string.IsNullOrEmpty(levelFile))
         {
             // Open file with filter
             var extensions = new [] {
