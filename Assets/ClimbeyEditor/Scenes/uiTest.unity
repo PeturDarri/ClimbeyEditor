@@ -268,7 +268,7 @@ MonoBehaviour:
   startX: 0
   startY: 0
   startZ: 0
-  lineMaterial: {fileID: 2100000, guid: 7bd81fc20b5f7104ea5b789445fb3127, type: 2}
+  lineMaterial: {fileID: 2100000, guid: 90c9c59baacdc9941a026ff35c78f05a, type: 2}
 --- !u!114 &121593710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -281,7 +281,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LineColor: {r: 0.19999993, g: 1, b: 0, a: 1}
-  lineMaterial: {fileID: 2100000, guid: 7bd81fc20b5f7104ea5b789445fb3127, type: 2}
+  lineMaterial: {fileID: 2100000, guid: 90c9c59baacdc9941a026ff35c78f05a, type: 2}
   HandleTexture: {fileID: 2800000, guid: 4e2b9b73092eb6e4892fe46f3f80ee8a, type: 3}
 --- !u!1 &289517526
 GameObject:
