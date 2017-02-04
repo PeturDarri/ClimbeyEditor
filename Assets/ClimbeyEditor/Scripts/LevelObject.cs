@@ -5,18 +5,15 @@ using UnityEngine.UI;
 
 public class LevelObject : MonoBehaviour
 {
+    public ObjectType Type;
     public bool LockX, LockY, LockZ;
     public bool IsSelected;
-
-    public virtual LevelManager.Block GetBlock(bool x, bool y, bool z)
-    {
-        return new LevelManager.Block();
-    }
+    public bool Scaleable = true;
 
     public override bool Equals(object obj)
     {
         if(obj == null)return false;
-        LevelObject other = obj as LevelObject;
+        var other = obj as LevelObject;
         if(other == null)return false;
         return other.gameObject.GetInstanceID() == gameObject.GetInstanceID();
     }
@@ -24,6 +21,21 @@ public class LevelObject : MonoBehaviour
     public override int GetHashCode()
     {
         return gameObject.GetInstanceID();
+    }
+
+    public virtual void Start()
+    {
+        LevelManager.instance.OnSave += OnSave;
+    }
+
+    public void OnSave()
+    {
+        LevelManager.instance.RegisterObject(GetObject());
+    }
+
+    public virtual LevelManager.Block GetObject()
+    {
+        return new LevelManager.Block();
     }
 }
 

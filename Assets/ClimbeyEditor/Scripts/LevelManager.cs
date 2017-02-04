@@ -8,7 +8,6 @@ using SFB;
 
 public class LevelManager : MonoBehaviour
 {
-    public List<PrefabBlock> PrefabBlocks;
 
     [Serializable]
     public class PrefabBlock
@@ -55,7 +54,7 @@ public class LevelManager : MonoBehaviour
     [Serializable]
     public class SignBlock : Block
     {
-        public string Text;
+        public string text;
     }
 
     [Serializable]
@@ -110,6 +109,8 @@ public class LevelManager : MonoBehaviour
             return removeList;
         }
     }
+
+    public List<Mesh> Shapes;
 
     public List<Block> Blocks = new List<Block>();
     public List<SignBlock> SignBlocks = new List<SignBlock>();
@@ -193,16 +194,36 @@ public class LevelManager : MonoBehaviour
 
         foreach (var block in loadedLevel.LevelArray)
         {
-            var singleOrDefault = PrefabBlocks.SingleOrDefault(x => x.Prefab.name == block.Type);
-            if (singleOrDefault == null) continue;
-            var prefab = singleOrDefault.Prefab ?? PrefabBlocks[0].Prefab;
-
+            var prefab = (GameObject) Resources.Load("Level Objects/" + block.Type);
+            if (prefab == null) continue;
             var newBlock = Instantiate(prefab);
+            var blockComp = newBlock.GetComponent<BasicBlock>();
+            newBlock.transform.parent = transform;
 
             newBlock.transform.position = block.Position;
             newBlock.transform.localScale = block.Size;
             newBlock.transform.rotation = block.Rotation;
+            blockComp.LockX = block.LockX;
+            blockComp.LockY = block.LockY;
+            blockComp.LockZ = block.LockZ;
+        }
+
+        foreach (var sign in loadedLevel.SignsArray)
+        {
+            var prefab = (GameObject) Resources.Load("Level Objects/Sign");
+            if (prefab == null) continue;
+            var newBlock = Instantiate(prefab);
+            var signComp = newBlock.GetComponent<Sign>();
             newBlock.transform.parent = transform;
+
+            newBlock.transform.position = sign.Position;
+            newBlock.transform.localScale = sign.Size;
+            newBlock.transform.rotation = sign.Rotation;
+            signComp.LockX = sign.LockX;
+            signComp.LockY = sign.LockY;
+            signComp.LockZ = sign.LockZ;
+            Debug.Log(sign.text);
+            signComp.Text = sign.text;
         }
     }
 

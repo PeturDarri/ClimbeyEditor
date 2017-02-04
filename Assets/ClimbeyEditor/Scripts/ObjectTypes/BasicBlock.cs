@@ -5,36 +5,55 @@ using UnityEngine;
 
 public class BasicBlock : LevelObject
 {
-    public ObjectType Type;
     public Shape Shape = Shape.None;
 
-    private void Start()
+    public override void Start()
     {
-        LevelManager.instance.OnSave += OnSave;
+        base.Start();
+
+        if (Shape > 0)
+        {
+            GetComponent<MeshFilter>().mesh = LevelManager.instance.Shapes[(int)Shape - 1];
+        }
     }
 
-    private void OnSave()
+    public override LevelManager.Block GetObject()
     {
-        LevelManager.instance.RegisterObject(GetBlock(LockX, LockY, LockZ));
-    }
-
-    public override LevelManager.Block GetBlock(bool x, bool y, bool z)
-    {
-        var newBlock = new LevelManager.Block();
-        newBlock.Type = GetShape();
-        newBlock.Size = transform.localScale;
-        newBlock.Position = transform.position;
-        newBlock.Rotation = transform.rotation;
-        newBlock.LockX = x;
-        newBlock.LockY = y;
-        newBlock.LockZ = z;
+        var newBlock = new LevelManager.Block
+        {
+            Type = GetShape(),
+            Size = transform.localScale,
+            Position = transform.position,
+            Rotation = transform.rotation,
+            LockX = LockX,
+            LockY = LockY,
+            LockZ = LockZ
+        };
         return newBlock;
     }
 
     private string GetShape()
     {
-        if (Shape > 0)
-            return Shape + "NoGrip";
-        return Type.ToString();
+        if (Shape <= 0) return Type.ToString();
+        var stringType = "Grip";
+        switch (Type)
+        {
+            case ObjectType.Grabbable:
+                stringType = "Grip";
+                break;
+            case ObjectType.Metal:
+                stringType = "NoGrip";
+                break;
+            case ObjectType.Icy:
+                stringType = "Ice";
+                break;
+            case ObjectType.Glass:
+                stringType = "Seethrough";
+                break;
+            case ObjectType.Lamp:
+                stringType = "Light";
+                break;
+        }
+        return Shape + stringType;
     }
 }

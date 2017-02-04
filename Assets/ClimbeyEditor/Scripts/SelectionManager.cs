@@ -276,8 +276,8 @@ public class SelectionManager : MonoBehaviour
             //Reset rotation
             var curRot = child.transform.rotation;
             child.transform.rotation = (local) ? Quaternion.identity : curRot;
-            var render = child.GetComponent<Renderer>();
-            bounds.Encapsulate(render.bounds);
+            var collide = child.GetComponent<Collider>();
+            bounds.Encapsulate(collide.bounds);
             child.transform.rotation = curRot;
         }
 
@@ -357,8 +357,9 @@ public class SelectionManager : MonoBehaviour
             foreach (var child in selection)
             {
                 child.transform.eulerAngles += transform.eulerAngles - prevRot;
-                child.transform.localScale += transform.localScale - prevSize;
                 child.transform.position += transform.position - prevPos;
+                if(child.Scaleable)
+                    child.transform.localScale += transform.localScale - prevSize;
             }
         }
 

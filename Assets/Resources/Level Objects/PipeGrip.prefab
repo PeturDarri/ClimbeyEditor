@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 23911735914468204}
   - component: {fileID: 114633075198172926}
   m_Layer: 0
-  m_Name: Grabbable
+  m_Name: PipeGrip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -104,8 +104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35aad701466714b4db10251a6ed77be6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Type: 0
   LockX: 0
   LockY: 0
   LockZ: 0
-  Type: 0
-  Shape: 0
+  IsSelected: 0
+  Scaleable: 1
+  Shape: 3

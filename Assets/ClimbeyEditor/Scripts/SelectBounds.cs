@@ -227,7 +227,7 @@ public class SelectBounds : MonoBehaviour
 
             foreach (var child in SelectionManager.instance.Selection)
             {
-                var childBounds = child.GetComponent<Renderer>().bounds;
+                var childBounds = child.GetComponent<Collider>().bounds;
                 DrawCube(childBounds, child.transform.eulerAngles);
             }
         }
