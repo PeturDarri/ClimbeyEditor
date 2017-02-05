@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: Grabbable
+  m_Name: Lava
   m_Shader: {fileID: 4800000, guid: 19fdae055646bae4ba60c2482c2ddb72, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 5
@@ -54,13 +54,13 @@ Material:
     - first:
         name: _MainTex
       second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
+        m_Texture: {fileID: 2800000, guid: a363306e5e11e004b8224d822acc4336, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - first:
         name: _MainTexTop
       second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
+        m_Texture: {fileID: 2800000, guid: a363306e5e11e004b8224d822acc4336, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - first:
@@ -132,10 +132,10 @@ Material:
       second: 0.02
     - first:
         name: _Scale
-      second: 2
+      second: 1
     - first:
         name: _Scale2
-      second: 2
+      second: 1
     - first:
         name: _SideScale
       second: 1
@@ -163,7 +163,7 @@ Material:
     m_Colors:
     - first:
         name: _Color
-      second: {r: 0.6397059, g: 0.6397059, b: 0.6397059, a: 1}
+      second: {r: 1, g: 1, b: 1, a: 1}
     - first:
         name: _EmissionColor
       second: {r: 0, g: 0, b: 0, a: 1}

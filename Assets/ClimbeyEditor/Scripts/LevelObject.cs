@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -8,7 +9,10 @@ public class LevelObject : MonoBehaviour
     public ObjectType Type;
     public bool LockX, LockY, LockZ;
     public bool IsSelected;
+    public bool Rotateable = true;
     public bool Scaleable = true;
+    public string TypeString;
+    public Vector3 _startScale, _startRot;
 
     public override bool Equals(object obj)
     {
@@ -26,6 +30,8 @@ public class LevelObject : MonoBehaviour
     public virtual void Start()
     {
         LevelManager.instance.OnSave += OnSave;
+        _startRot = transform.eulerAngles;
+        _startScale = transform.localScale;
     }
 
     public void OnSave()
@@ -35,7 +41,23 @@ public class LevelObject : MonoBehaviour
 
     public virtual LevelManager.Block GetObject()
     {
-        return new LevelManager.Block();
+        var newBlock = new LevelManager.Block()
+        {
+            Type = TypeString,
+            Size = Scaleable ? transform.localScale : _startScale,
+            Position = transform.position,
+            Rotation = Rotateable ? transform.rotation : Quaternion.Euler(_startRot),
+            LockX = LockX,
+            LockY = LockY,
+            LockZ = LockZ,
+        };
+
+        return newBlock;
+    }
+
+    public virtual LevelObject Duplicate()
+    {
+        return Instantiate(this, transform.parent);
     }
 }
 

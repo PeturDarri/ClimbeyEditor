@@ -30,6 +30,11 @@ public class SelectionManager : MonoBehaviour
         get { return Camera.main.GetComponent<TransformGizmo>().isTransforming; }
     }
 
+    public TransformType transformType
+    {
+        get { return Camera.main.GetComponent<TransformGizmo>().type; }
+    }
+
 
     //Events
     public delegate void OnSelectionChangedEvent();
@@ -227,37 +232,34 @@ public class SelectionManager : MonoBehaviour
 
     private void DuplicateSelection()
     {
-        if (!isEmpty)
+        if (isEmpty) return;
+        var dupeList = Selection.ToList();
+        ClearSelection();
+        var newList = new List<LevelObject>();
+        foreach (var dupe in dupeList)
         {
-            var dupeList = Selection.ToList();
-            ClearSelection();
-            var newList = new List<LevelObject>();
-            foreach (var dupe in dupeList)
-            {
-                var newObj = Instantiate(dupe);
-                newObj.name = dupe.name;
-                newObj.transform.position = dupe.transform.position;
-                newObj.transform.parent = LevelManager.instance.transform;
-                newList.Add(newObj);
-            }
-            SetMultiSelection(newList);
+            var newObj = dupe.Duplicate();
+            if (newObj == null) continue;
+            newObj.name = dupe.name;
+            newObj.transform.position = dupe.transform.position;
+            newObj.transform.parent = LevelManager.instance.transform;
+            newList.Add(newObj);
+        }
+        SetMultiSelection(newList);
 
-            if (OnSelectionChanged != null)
-            {
-                OnSelectionChanged();
-            }
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
         }
     }
 
     private void SetMultiSelection(List<LevelObject> objList)
     {
-        if (objList.Count > 0)
+        if (objList.Count <= 0) return;
+        //Set all objects as children of parent
+        foreach (var obj in objList)
         {
-            //Set all objects as children of parent
-            foreach (var obj in objList)
-            {
-                AddToSelection(obj);
-            }
+            AddToSelection(obj);
         }
     }
 
@@ -287,7 +289,7 @@ public class SelectionManager : MonoBehaviour
         return bounds;
     }
 
-    private void AddToSelection(LevelObject levelObject)
+    public void AddToSelection(LevelObject levelObject)
     {
         if (Selection.Contains(levelObject)) return;
         //Check if current LevelObject is a child of another LevelObject
@@ -356,9 +358,10 @@ public class SelectionManager : MonoBehaviour
             var selection = Selection.ToList();
             foreach (var child in selection)
             {
-                child.transform.eulerAngles += transform.eulerAngles - prevRot;
                 child.transform.position += transform.position - prevPos;
-                if(child.Scaleable)
+                if (child.Rotateable && transformType == TransformType.Rotate)
+                    child.transform.eulerAngles += transform.eulerAngles - prevRot;
+                if(child.Scaleable && transformType == TransformType.Bounds)
                     child.transform.localScale += transform.localScale - prevSize;
             }
         }

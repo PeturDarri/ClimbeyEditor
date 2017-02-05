@@ -32,7 +32,7 @@ public class BasicBlock : LevelObject
         return newBlock;
     }
 
-    private string GetShape()
+    public string GetShape()
     {
         if (Shape <= 0) return Type.ToString();
         var stringType = "Grip";

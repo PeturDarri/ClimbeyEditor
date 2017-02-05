@@ -98,10 +98,10 @@ public class LevelManager : MonoBehaviour
         get
         {
             var wholeList = GetComponentsInChildren<LevelObject>().ToList();
-            var removeList = wholeList;
+            var removeList = wholeList.ToList();
             foreach (var old in wholeList)
             {
-                if (old.transform.parent.GetComponent<LevelObject>() != null)
+                if (old.transform.parent.GetComponent<LevelObject>() != null || old.GetComponent<Collider>() == null)
                 {
                     removeList.Remove(old);
                 }
@@ -197,63 +197,100 @@ public class LevelManager : MonoBehaviour
             var prefab = (GameObject) Resources.Load("Level Objects/" + block.Type);
             if (prefab == null) continue;
             var newBlock = Instantiate(prefab);
-            var blockComp = newBlock.GetComponent<BasicBlock>();
+            var blockComp = newBlock.GetComponent<LevelObject>();
             newBlock.transform.parent = transform;
 
             newBlock.transform.position = block.Position;
             newBlock.transform.localScale = block.Size;
             newBlock.transform.rotation = block.Rotation;
+            if (blockComp == null) continue;
             blockComp.LockX = block.LockX;
             blockComp.LockY = block.LockY;
             blockComp.LockZ = block.LockZ;
         }
 
-        foreach (var sign in loadedLevel.SignsArray)
-        {
-            var prefab = (GameObject) Resources.Load("Level Objects/Sign");
-            if (prefab == null) continue;
-            var newBlock = Instantiate(prefab);
-            var signComp = newBlock.GetComponent<Sign>();
-            newBlock.transform.parent = transform;
+        if (loadedLevel.SignsArray.Any())
+            foreach (var sign in loadedLevel.SignsArray)
+            {
+                var prefab = (GameObject) Resources.Load("Level Objects/Sign");
+                if (prefab == null) continue;
+                var newBlock = Instantiate(prefab);
+                var signComp = newBlock.GetComponent<Sign>();
+                newBlock.transform.parent = transform;
 
-            newBlock.transform.position = sign.Position;
-            newBlock.transform.localScale = sign.Size;
-            newBlock.transform.rotation = sign.Rotation;
-            signComp.LockX = sign.LockX;
-            signComp.LockY = sign.LockY;
-            signComp.LockZ = sign.LockZ;
-            Debug.Log(sign.text);
-            signComp.Text = sign.text;
-        }
-    }
+                newBlock.transform.position = sign.Position;
+                newBlock.transform.localScale = sign.Size;
+                newBlock.transform.rotation = sign.Rotation;
+                signComp.LockX = sign.LockX;
+                signComp.LockY = sign.LockY;
+                signComp.LockZ = sign.LockZ;
+                signComp.Text = sign.text;
+            }
+
+        if (loadedLevel.LightsArray != null && loadedLevel.LightsArray.Any())
+            foreach (var light in loadedLevel.LightsArray)
+            {
+                var prefab = (GameObject) Resources.Load("Level Objects/" + light.Type);
+                if (prefab == null) continue;
+                var newBlock = Instantiate(prefab);
+                var lightComp = newBlock.GetComponent<Lamp>();
+                newBlock.transform.parent = transform;
+
+                newBlock.transform.position = light.Position;
+                newBlock.transform.localScale = light.Size;
+                newBlock.transform.rotation = light.Rotation;
+                lightComp.LockX = light.LockX;
+                lightComp.LockY = light.LockY;
+                lightComp.LockZ = light.LockZ;
+                lightComp.Color = new Color(light.R, light.G, light.B);
+            }
+
+        if (loadedLevel.ZiplinesArray.Any())
+            foreach (var zip in loadedLevel.ZiplinesArray)
+            {
+                Debug.Log(zip.Type);
+                var prefab = (GameObject) Resources.Load("Level Objects/" + zip.Type);
+                if (prefab == null) continue;
+                var newBlock = Instantiate(prefab, transform);
+                var zipComp = newBlock.GetComponent<Zipline>();
+
+                zipComp.SetPoles(zip.PoleBlocks[0], zip.PoleBlocks[1]);
+            }
+}
 
     public void RegisterObject(Block obj)
     {
+        if (obj == null) return;
         Blocks.Add(obj);
     }
 
     public void RegisterObject(MovingBlock obj)
     {
+        if (obj == null) return;
         MovingBlocks.Add(obj);
     }
 
     public void RegisterObject(SignBlock obj)
     {
+        if (obj == null) return;
         SignBlocks.Add(obj);
     }
 
     public void RegisterObject(ZiplineBlock obj)
     {
+        if (obj == null) return;
         ZiplineBlocks.Add(obj);
     }
 
     public void RegisterObject(LightBlock obj)
     {
+        if (obj == null) return;
         LightBlocks.Add(obj);
     }
 
     public void RegisterObject(ClimbeyGroup obj)
     {
+        if (obj == null) return;
         Groups.Add(obj);
     }
 

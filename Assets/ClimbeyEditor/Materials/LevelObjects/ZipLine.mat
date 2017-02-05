@@ -6,21 +6,15 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: Grabbable
-  m_Shader: {fileID: 4800000, guid: 19fdae055646bae4ba60c2482c2ddb72, type: 3}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 5
+  m_Name: ZipLine
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _EMISSION
+  m_LightmapFlags: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
   m_SavedProperties:
     serializedVersion: 2
     m_TexEnvs:
-    - first:
-        name: _Bottom
-      second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - first:
         name: _BumpMap
       second:
@@ -32,7 +26,7 @@ Material:
       second:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 1, y: 0}
+        m_Offset: {x: 0, y: 0}
     - first:
         name: _DetailMask
       second:
@@ -54,13 +48,7 @@ Material:
     - first:
         name: _MainTex
       second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - first:
-        name: _MainTexTop
-      second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - first:
@@ -81,22 +69,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Side
-      second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Top
-      second:
-        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     m_Floats:
-    - first:
-        name: _BottomScale
-      second: 1
     - first:
         name: _BumpScale
       second: 1
@@ -114,7 +87,7 @@ Material:
       second: 1
     - first:
         name: _Glossiness
-      second: 0
+      second: 0.656
     - first:
         name: _GlossyReflections
       second: 1
@@ -131,15 +104,6 @@ Material:
         name: _Parallax
       second: 0.02
     - first:
-        name: _Scale
-      second: 2
-    - first:
-        name: _Scale2
-      second: 2
-    - first:
-        name: _SideScale
-      second: 1
-    - first:
         name: _SmoothnessTextureChannel
       second: 0
     - first:
@@ -147,12 +111,6 @@ Material:
       second: 1
     - first:
         name: _SrcBlend
-      second: 1
-    - first:
-        name: _TileFac
-      second: 5
-    - first:
-        name: _TopScale
       second: 1
     - first:
         name: _UVSec
@@ -163,7 +121,7 @@ Material:
     m_Colors:
     - first:
         name: _Color
-      second: {r: 0.6397059, g: 0.6397059, b: 0.6397059, a: 1}
+      second: {r: 0.41176468, g: 0.41176468, b: 0.41176468, a: 1}
     - first:
         name: _EmissionColor
       second: {r: 0, g: 0, b: 0, a: 1}

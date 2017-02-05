@@ -14,7 +14,6 @@ public class GridManager: MonoBehaviour
     private Transform select;
 
     //Events
-    //Events
     public delegate void GridEvent();
 
     public event GridEvent GridDisabled;
@@ -73,16 +72,16 @@ public class GridManager: MonoBehaviour
         SelectionManager.instance.TransformSelection();
 
         //Get the selection bounds
-        var bounds = SelectionManager.instance.GetBounds(true);
+        var bounds = SelectionManager.instance.GetBounds();
         bounds.center = SelectionManager.instance.transform.position;
 
         // Snap the max
-        Vector3 t = bounds.max;
+        var t = bounds.max;
         t.x = SnapRound( t.x, SnapValue );
         t.y = SnapRound( t.y, SnapValue );
         t.z = SnapRound( t.z, SnapValue );
 
-        Vector3 tm = bounds.min;
+        var tm = bounds.min;
         tm.x = SnapRound( tm.x, SnapValue );
         tm.y = SnapRound( tm.y, SnapValue );
         tm.z = SnapRound( tm.z, SnapValue );
@@ -90,7 +89,7 @@ public class GridManager: MonoBehaviour
         bounds.SetMinMax(tm, t);
 
         //Keep sizes from being zero
-        Vector3 size = bounds.size;
+        var size = bounds.size;
         size.x = Mathf.Clamp(size.x, SnapValue, float.MaxValue);
         size.y = Mathf.Clamp(size.y, SnapValue, float.MaxValue);
         size.z = Mathf.Clamp(size.z, SnapValue, float.MaxValue);
@@ -100,7 +99,7 @@ public class GridManager: MonoBehaviour
         select.localScale = bounds.size;
 
         //Rotation snap
-        Vector3 r = select.eulerAngles;
+        var r = select.eulerAngles;
         r.x = SnapRound( r.x, SnapValueRot ) % 360.0f;
         r.y = SnapRound( r.y, SnapValueRot ) % 360.0f;
         r.z = SnapRound( r.z, SnapValueRot ) % 360.0f;

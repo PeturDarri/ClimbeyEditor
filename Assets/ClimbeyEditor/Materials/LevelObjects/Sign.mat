@@ -7,7 +7,7 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: Sign
-  m_Shader: {fileID: 4800000, guid: 295f173b651b2bf438b0a4c870d4b909, type: 3}
+  m_Shader: {fileID: 4800000, guid: 19fdae055646bae4ba60c2482c2ddb72, type: 3}
   m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
   m_CustomRenderQueue: -1
@@ -47,6 +47,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     - first:
         name: _MainTex
+      second:
+        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - first:
+        name: _MainTexTop
       second:
         m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -103,6 +109,12 @@ Material:
     - first:
         name: _Parallax
       second: 0.02
+    - first:
+        name: _Scale
+      second: 2
+    - first:
+        name: _Scale2
+      second: 2
     - first:
         name: _SmoothnessTextureChannel
       second: 0
