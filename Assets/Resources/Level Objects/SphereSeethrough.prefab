@@ -109,5 +109,9 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Rotateable: 1
   Scaleable: 1
-  Shape: 1
+  TypeString: 
+  _startScale: {x: 0, y: 0, z: 0}
+  _startRot: {x: 0, y: 0, z: 0}
+  _shape: 1

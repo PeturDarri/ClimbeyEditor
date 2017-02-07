@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using RuntimeGizmos;
+using UnityEngine.EventSystems;
 
 public class SelectionManager : MonoBehaviour
 {
@@ -100,7 +101,7 @@ public class SelectionManager : MonoBehaviour
             else if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftShift))
             {
                 //Remove from selection
-                Selection.Remove(levelObject.GetComponent<LevelObject>());
+                RemoveFromSelection(levelObject.GetComponent<LevelObject>());
             }
             else
             {
@@ -140,7 +141,11 @@ public class SelectionManager : MonoBehaviour
 
     private void ClearSelection()
     {
-        Selection.Clear();
+        foreach (var obj in Selection.ToList())
+        {
+            RemoveFromSelection(obj);
+        }
+        //Selection.Clear();
     }
 
     private void ResetPrev()
@@ -313,13 +318,13 @@ public class SelectionManager : MonoBehaviour
         levelObject.IsSelected = true;
     }
 
-    private void DeleteSelection()
+    public void DeleteSelection()
     {
         var oldList = Selection.ToList();
         ClearSelection();
         foreach (var obj in oldList)
         {
-            Selection.Remove(obj);
+            RemoveFromSelection(obj);
             Destroy(obj.gameObject);
             //Debug.Log("Destroy!");
         }
@@ -330,7 +335,13 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private void SelectAll()
+    public void RemoveFromSelection(LevelObject obj)
+    {
+        obj.IsSelected = false;
+        Selection.Remove(obj);
+    }
+
+    public void SelectAll()
     {
         SetMultiSelection(LevelManager.instance.LevelObjects);
 
@@ -373,13 +384,13 @@ public class SelectionManager : MonoBehaviour
 
     private void DragSelection()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (GetMouseButtonDown(0))
         {
             prevMouse = mousePos;
             isDragging = true;
         }
 
-        if (Input.GetMouseButton(0))
+        if (GetMouseButton(0))
         {
             if (Vector2.Distance(mousePos, prevMouse) > 10 && CameraManager.instance.cameraState == CameraManager.CameraState.Free && !isTransforming)
             {
@@ -387,7 +398,7 @@ public class SelectionManager : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (GetMouseButtonUp(0))
         {
             var box = FromDragPoints(prevMouse, mousePos);
             if (isDragging && shouldDrawBox)
@@ -446,5 +457,21 @@ public class SelectionManager : MonoBehaviour
             height = Mathf.Abs(d.y)
         };
         return r;
+    }
+
+    //Here to ignore mouse events if user is interacting with UI
+    private bool GetMouseButtonDown(int button)
+    {
+        return !EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(button);
+    }
+
+    private bool GetMouseButton(int button)
+    {
+        return !EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButton(button);
+    }
+
+    private bool GetMouseButtonUp(int button)
+    {
+        return Input.GetMouseButtonUp(button);
     }
 }

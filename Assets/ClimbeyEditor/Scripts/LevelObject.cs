@@ -1,8 +1,6 @@
 ﻿using System;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.UI;
 
 public class LevelObject : MonoBehaviour
 {
@@ -34,6 +32,16 @@ public class LevelObject : MonoBehaviour
         _startScale = transform.localScale;
     }
 
+    public virtual Dictionary<string, object> GetProperties()
+    {
+        return new Dictionary<string, object> {};
+    }
+
+    private void OnDestroy()
+    {
+        LevelManager.instance.OnSave -= OnSave;
+    }
+
     public void OnSave()
     {
         LevelManager.instance.RegisterObject(GetObject());
@@ -63,11 +71,11 @@ public class LevelObject : MonoBehaviour
 
 public enum Shape
 {
-    None,
-    Sphere,
-    Hemi,
-    Pipe,
-    Pyramid
+    Cube = 0,
+    Sphere = 1,
+    Hemi = 2,
+    Pipe = 3,
+    Pyramid = 4
 }
 
 public enum ObjectType

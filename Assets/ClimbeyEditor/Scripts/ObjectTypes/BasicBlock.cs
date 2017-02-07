@@ -5,16 +5,21 @@ using UnityEngine;
 
 public class BasicBlock : LevelObject
 {
-    public Shape Shape = Shape.None;
+    public Shape _shape;
+    public Shape Shape
+    {
+        get { return _shape; }
+        set
+        {
+            _shape = value;
+            UpdateShape();
+        }
+    }
 
     public override void Start()
     {
         base.Start();
-
-        if (Shape > 0)
-        {
-            GetComponent<MeshFilter>().mesh = LevelManager.instance.Shapes[(int)Shape - 1];
-        }
+        GetComponent<MeshFilter>().mesh = LevelManager.instance.Shapes[(int)Shape];
     }
 
     public override LevelManager.Block GetObject()
@@ -30,6 +35,11 @@ public class BasicBlock : LevelObject
             LockZ = LockZ
         };
         return newBlock;
+    }
+
+    public override Dictionary<string, object> GetProperties()
+    {
+        return new Dictionary<string, object> {{"Shape", Shape}};
     }
 
     public string GetShape()
@@ -55,5 +65,12 @@ public class BasicBlock : LevelObject
                 break;
         }
         return Shape + stringType;
+    }
+
+    public Mesh UpdateShape()
+    {
+        var filter = GetComponent<MeshFilter>();
+        filter.mesh = LevelManager.instance.Shapes[(int) _shape];
+        return LevelManager.instance.Shapes[(int) _shape];
     }
 }

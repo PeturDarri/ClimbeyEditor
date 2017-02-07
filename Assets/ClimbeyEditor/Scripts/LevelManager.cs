@@ -189,6 +189,8 @@ public class LevelManager : MonoBehaviour
                 return;
             }
         }
+        SelectionManager.instance.SelectAll();
+        SelectionManager.instance.DeleteSelection();
         var loadedLevel = new Level();
         JsonUtility.FromJsonOverwrite(File.ReadAllText(levelFile), loadedLevel);
 
@@ -209,7 +211,7 @@ public class LevelManager : MonoBehaviour
             blockComp.LockZ = block.LockZ;
         }
 
-        if (loadedLevel.SignsArray.Any())
+        if (loadedLevel.SignsArray != null && loadedLevel.SignsArray.Any())
             foreach (var sign in loadedLevel.SignsArray)
             {
                 var prefab = (GameObject) Resources.Load("Level Objects/Sign");
@@ -224,7 +226,7 @@ public class LevelManager : MonoBehaviour
                 signComp.LockX = sign.LockX;
                 signComp.LockY = sign.LockY;
                 signComp.LockZ = sign.LockZ;
-                signComp.Text = sign.text;
+                signComp.SignText = sign.text;
             }
 
         if (loadedLevel.LightsArray != null && loadedLevel.LightsArray.Any())
@@ -245,7 +247,7 @@ public class LevelManager : MonoBehaviour
                 lightComp.Color = new Color(light.R, light.G, light.B);
             }
 
-        if (loadedLevel.ZiplinesArray.Any())
+        if (loadedLevel.ZiplinesArray != null && loadedLevel.ZiplinesArray.Any())
             foreach (var zip in loadedLevel.ZiplinesArray)
             {
                 Debug.Log(zip.Type);
@@ -256,7 +258,33 @@ public class LevelManager : MonoBehaviour
 
                 zipComp.SetPoles(zip.PoleBlocks[0], zip.PoleBlocks[1]);
             }
-}
+        
+        if (loadedLevel.MovingArray != null && loadedLevel.MovingArray.Any())
+            foreach (var move in loadedLevel.MovingArray)
+            {
+                Debug.Log(move.Type);
+                var prefab = (GameObject) Resources.Load("Level Objects/MovingBlock");
+                if (prefab == null) continue;
+                var emptyGroup = new GameObject("MovingBlockGroup");
+                emptyGroup.transform.parent = transform;
+
+                var newBlock = Instantiate(prefab, emptyGroup.transform);
+                newBlock.transform.position = move.Position;
+                newBlock.transform.rotation = move.Rotation;
+                newBlock.transform.localScale = move.Size;
+
+                if (move.Waypoints != null && move.Waypoints.Any())
+                foreach (var waypoint in move.Waypoints)
+                {
+                    var newWay = (GameObject) Resources.Load("Level Objects/Waypoint");
+                    newWay = Instantiate(newWay, emptyGroup.transform);
+                    newWay.transform.position = waypoint.Position;
+                    newWay.transform.localScale = waypoint.Size;
+                    newWay.transform.rotation = waypoint.Rotation;
+                }
+            }
+        
+    }
 
     public void RegisterObject(Block obj)
     {

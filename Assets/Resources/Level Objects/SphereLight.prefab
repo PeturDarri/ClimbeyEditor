@@ -144,5 +144,11 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Rotateable: 1
   Scaleable: 1
-  Shape: 1
+  TypeString: 
+  _startScale: {x: 0, y: 0, z: 0}
+  _startRot: {x: 0, y: 0, z: 0}
+  _shape: 1
+  LampSprite: {fileID: 2800000, guid: bc5f967ea0c858b4faf17f64dc377d2a, type: 3}
+  hidden: 0

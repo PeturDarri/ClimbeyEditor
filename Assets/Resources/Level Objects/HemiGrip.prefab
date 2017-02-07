@@ -114,4 +114,4 @@ MonoBehaviour:
   TypeString: 
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
-  Shape: 2
+  _shape: 2

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class Sign : LevelObject
 {
     private string _text;
-    public string Text
+    public string SignText
     {
         get { return _text; }
         set
@@ -28,10 +28,15 @@ public class Sign : LevelObject
             LockX = LockX,
             LockY = LockY,
             LockZ = LockZ,
-            text = Text
+            text = SignText
         };
 
         return newBlock;
+    }
+
+    public override Dictionary<string, object> GetProperties()
+    {
+        return new Dictionary<string, object> {{"SignText", SignText}};
     }
 
     public void UpdateText()
