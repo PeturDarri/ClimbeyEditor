@@ -29,6 +29,8 @@ public class SelectionManager : MonoBehaviour
     private PosRotSize prevPosRotSize;
     private bool centerChanged, isDragging, shouldDrawBox;
     private Vector3 prevMouse, mousePos;
+
+    public List<LevelObject> Clipboard;
     public Texture selectionBox;
 
     public bool isTransforming
@@ -68,6 +70,7 @@ public class SelectionManager : MonoBehaviour
 
         _prevSelection = new List<LevelObject>();
         Selection = new List<LevelObject>();
+        Clipboard = new List<LevelObject>();
 
         prevPos = Vector3.one;
         prevRot = Vector3.one;
@@ -234,6 +237,36 @@ public class SelectionManager : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.G))
             {
                 //GroupSelection();
+            }
+            else if (Input.GetKeyDown(KeyCode.C))
+            {
+                //Copy
+                Clipboard = Selection.ToList();
+            }
+            else if (Input.GetKeyDown(KeyCode.V))
+            {
+                //Paste
+                var list = Clipboard.ToList();
+                using (new UndoTransaction("Paste clipboard"))
+                {
+                    ClearSelection();
+                    var newList = new List<LevelObject>();
+                    foreach (var dupe in list)
+                    {
+                        if (!dupe.canDestroy) continue;
+                        var newObjList = dupe.Duplicate();
+                        if (newObjList == null) continue;
+                        newList.AddRange(newObjList);
+                    }
+                    SetMultiSelection(newList);
+                    var pos = CameraManager.Instance.GetTarget();
+                    TransformSelectionEnd(new PosRotSize(pos - transform.position, Vector3.zero, Vector3.zero));
+                }
+
+                if (OnSelectionChanged != null)
+                {
+                    OnSelectionChanged();
+                }
             }
         }
         else if (Input.GetKey(KeyCode.LeftShift))
