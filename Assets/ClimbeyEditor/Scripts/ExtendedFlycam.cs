@@ -41,12 +41,12 @@ public class ExtendedFlycam : MonoBehaviour
     {
         if (mouseEnabled)
         {
-            if (CameraManager.instance.cameraState != CameraManager.CameraState.Fly)
+            if (CameraManager.Instance.cameraState != CameraManager.CameraState.Fly)
             {
                 rotationX = transform.eulerAngles.y;
                 rotationY = -transform.eulerAngles.x;
             }
-            CameraManager.instance.cameraState = CameraManager.CameraState.Fly;
+            CameraManager.Instance.cameraState = CameraManager.CameraState.Fly;
             rotationX += Input.GetAxis("Mouse X") * cameraSensitivity * Time.deltaTime;
             rotationY += Input.GetAxis("Mouse Y") * cameraSensitivity * Time.deltaTime;
             rotationY = Mathf.Clamp (rotationY, -90, 90);
@@ -55,7 +55,7 @@ public class ExtendedFlycam : MonoBehaviour
         }
         else
         {
-            CameraManager.instance.cameraState = CameraManager.CameraState.Free;
+            CameraManager.Instance.cameraState = CameraManager.CameraState.Free;
         }
 
         if (Input.GetKey (KeyCode.LeftShift) || Input.GetKey (KeyCode.RightShift))
@@ -86,7 +86,7 @@ public class ExtendedFlycam : MonoBehaviour
         if (Input.GetKey (KeyCode.Q)) {transform.position += transform.up * climbSpeed * Time.deltaTime;}
         if (Input.GetKey (KeyCode.E)) {transform.position -= transform.up * climbSpeed * Time.deltaTime;}
 
-        if (Input.GetKeyDown (KeyCode.Z))
+        if (Input.GetKeyDown (KeyCode.Z) && !Input.GetKey(KeyCode.LeftShift))
         {
             if (mouseEnabled)
             {

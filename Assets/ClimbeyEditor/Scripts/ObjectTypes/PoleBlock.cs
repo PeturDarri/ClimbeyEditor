@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class PoleBlock : LevelObject
 {
@@ -34,17 +35,18 @@ public class PoleBlock : LevelObject
         return null;
     }
 
-    private void OnDestroy()
+    public override void OnDestroy()
     {
+        base.OnDestroy();
         ParentZip.SelfDestruct();
     }
 
-    public override LevelObject Duplicate()
+    public override List<LevelObject> Duplicate()
     {
         if (!ParentZip.canDupe) return null;
-
         ParentZip.canDupe = false;
         var newZip = Instantiate(ParentZip, transform.parent);
-        return newZip.PoleBlocks[0];
+        newZip.name = ParentZip.name;
+        return new List<LevelObject> {newZip.PoleBlocks[0], newZip.PoleBlocks[1]};
     }
 }

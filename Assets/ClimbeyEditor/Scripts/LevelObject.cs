@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using UndoMethods;
 
 public class LevelObject : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class LevelObject : MonoBehaviour
     public bool Scaleable = true;
     public string TypeString;
     public Vector3 _startScale, _startRot;
+    public bool canDestroy = true;
 
     public override bool Equals(object obj)
     {
@@ -27,7 +29,7 @@ public class LevelObject : MonoBehaviour
 
     public virtual void Start()
     {
-        LevelManager.instance.OnSave += OnSave;
+        LevelManager.Instance.OnSave += OnSave;
         _startRot = transform.eulerAngles;
         _startScale = transform.localScale;
     }
@@ -37,14 +39,20 @@ public class LevelObject : MonoBehaviour
         return new Dictionary<string, object> {};
     }
 
-    private void OnDestroy()
+    public virtual void DoDestroy(bool destroy = true)
     {
-        LevelManager.instance.OnSave -= OnSave;
+        UndoRedoManager.Instance().Push(DoDestroy, !destroy);
+        gameObject.SetActive(!destroy);
+    }
+
+    public virtual void OnDestroy()
+    {
+        LevelManager.Instance.OnSave -= OnSave;
     }
 
     public void OnSave()
     {
-        LevelManager.instance.RegisterObject(GetObject());
+        LevelManager.Instance.RegisterObject(GetObject());
     }
 
     public virtual LevelManager.Block GetObject()
@@ -63,9 +71,13 @@ public class LevelObject : MonoBehaviour
         return newBlock;
     }
 
-    public virtual LevelObject Duplicate()
+    public virtual List<LevelObject> Duplicate()
     {
-        return Instantiate(this, transform.parent);
+        var newObj = Instantiate(gameObject, transform.parent);
+        UndoRedoManager.Instance().Push(newObj.GetComponent<LevelObject>().DoDestroy, newObj.activeSelf, "Duplicate object");
+        newObj.transform.position = transform.position;
+        newObj.name = name;
+        return new List<LevelObject> {newObj.GetComponent<LevelObject>()};
     }
 }
 

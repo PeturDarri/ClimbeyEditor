@@ -5,15 +5,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Remoting;
 using RuntimeGizmos;
+using UndoMethods;
 using UnityEngine.EventSystems;
 
 public class SelectionManager : MonoBehaviour
 {
 
-    public static SelectionManager instance;
+    public static SelectionManager Instance;
 
+    private List<LevelObject> _prevSelection;
     public List<LevelObject> Selection;
+
     public Transform emptySelection;
 
     public bool isEmpty
@@ -22,6 +26,7 @@ public class SelectionManager : MonoBehaviour
     }
 
     private Vector3 prevPos, prevSize, prevRot;
+    private PosRotSize prevPosRotSize;
     private bool centerChanged, isDragging, shouldDrawBox;
     private Vector3 prevMouse, mousePos;
     public Texture selectionBox;
@@ -30,6 +35,8 @@ public class SelectionManager : MonoBehaviour
     {
         get { return Camera.main.GetComponent<TransformGizmo>().isTransforming; }
     }
+
+    private bool _transformingChanged;
 
     public TransformType transformType
     {
@@ -44,11 +51,11 @@ public class SelectionManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
-        else if (instance != this)
+        else if (Instance != this)
         {
             Destroy(gameObject);
 
@@ -59,33 +66,65 @@ public class SelectionManager : MonoBehaviour
             emptySelection = new GameObject("emptySelection").transform;
         }
 
+        _prevSelection = new List<LevelObject>();
         Selection = new List<LevelObject>();
 
         prevPos = Vector3.one;
         prevRot = Vector3.one;
         prevRot = Vector3.one;
+        prevPosRotSize = new PosRotSize(transform.position, transform.eulerAngles, transform.localScale);
 
         OnSelectionChanged += SelectionChanged;
     }
 
     private void Start()
     {
-        GridManager.instance.GridDisabled += GridDisabled;
-        GridManager.instance.OnSnap += Snap;
+        GridManager.Instance.GridDisabled += GridDisabled;
+        GridManager.Instance.OnSnap += Snap;
     }
 
     private void SelectionChanged()
     {
         CenterSelf();
+        UndoRedoManager.Instance().Push(ClearAndMulti, _prevSelection.ToList());
+        _prevSelection = Selection.ToList();
+    }
+
+    private void ClearAndMulti(List<LevelObject> objList)
+    {
+        ClearSelection();
+        SetMultiSelection(objList);
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
+        }
     }
 
     private void Update()
     {
+        if (_transformingChanged != isTransforming) IsTransformingChanged();
         DragSelection();
         SelectionHotkeys();
         if (!isTransforming) return;
         TransformSelection();
         UpdateTransform();
+    }
+
+    private void IsTransformingChanged()
+    {
+        _transformingChanged = isTransforming;
+
+        //Starting transform
+        if (isTransforming)
+        {
+            prevPosRotSize = new PosRotSize(transform.position, transform.eulerAngles, transform.localScale);
+        }
+        else
+        {
+            //Ending transform
+            TransformSelectionEnd(new PosRotSize(Vector3.zero, Vector3.zero, Vector3.zero));
+        }
     }
 
     public void SetSelection(Transform levelObject)
@@ -139,7 +178,7 @@ public class SelectionManager : MonoBehaviour
         TransformSelection();
     }
 
-    private void ClearSelection()
+    public void ClearSelection()
     {
         foreach (var obj in Selection.ToList())
         {
@@ -153,6 +192,7 @@ public class SelectionManager : MonoBehaviour
         prevPos = transform.position;
         prevRot = transform.eulerAngles;
         prevSize = transform.localScale;
+        prevPosRotSize = new PosRotSize(transform.position, transform.eulerAngles, transform.localScale);
     }
 
     private void CenterSelf()
@@ -198,13 +238,19 @@ public class SelectionManager : MonoBehaviour
         }
         else if (Input.GetKey(KeyCode.LeftShift))
         {
-            if (Input.GetKeyDown(KeyCode.S))
+            if (Input.GetKeyDown(KeyCode.Z))
             {
-
+                //Undo
+                UndoRedoManager.Instance().Undo();
             }
-            else if (Input.GetKeyDown(KeyCode.O))
+            else if (Input.GetKeyDown(KeyCode.Y))
             {
-                LevelManager.instance.LoadLevel();
+                //Redo
+                UndoRedoManager.Instance().Redo();
+            }
+            else if (Input.GetKeyDown(KeyCode.C))
+            {
+                Debug.Log("Undo = " + UndoRedoManager.Instance().UndoOperationCount);
             }
         }
         else
@@ -216,7 +262,7 @@ public class SelectionManager : MonoBehaviour
             {
                 if (!isEmpty)
                 {
-                    CameraManager.instance.SetTarget(transform);
+                    CameraManager.Instance.SetTarget(transform);
                 }
             }
             //Press Delete to delete selection
@@ -226,11 +272,11 @@ public class SelectionManager : MonoBehaviour
             }
             else if (Input.GetKeyDown(KeyCode.KeypadPlus))
             {
-                GridManager.instance.DoubleHalveGrid(true);
+                GridManager.Instance.DoubleHalveGrid(true);
             }
             else if (Input.GetKeyDown(KeyCode.KeypadMinus))
             {
-                GridManager.instance.DoubleHalveGrid(false);
+                GridManager.Instance.DoubleHalveGrid(false);
             }
         }
     }
@@ -239,18 +285,19 @@ public class SelectionManager : MonoBehaviour
     {
         if (isEmpty) return;
         var dupeList = Selection.ToList();
-        ClearSelection();
-        var newList = new List<LevelObject>();
-        foreach (var dupe in dupeList)
+        using (new UndoTransaction("Duplicate selection"))
         {
-            var newObj = dupe.Duplicate();
-            if (newObj == null) continue;
-            newObj.name = dupe.name;
-            newObj.transform.position = dupe.transform.position;
-            newObj.transform.parent = LevelManager.instance.transform;
-            newList.Add(newObj);
+            ClearSelection();
+            var newList = new List<LevelObject>();
+            foreach (var dupe in dupeList)
+            {
+                if (!dupe.canDestroy) continue;
+                var newObjList = dupe.Duplicate();
+                if (newObjList == null) continue;
+                newList.AddRange(newObjList);
+            }
+            SetMultiSelection(newList);
         }
-        SetMultiSelection(newList);
 
         if (OnSelectionChanged != null)
         {
@@ -258,13 +305,20 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private void SetMultiSelection(List<LevelObject> objList)
+    public void SetMultiSelection(List<LevelObject> objList)
     {
+        Debug.Log(objList.Count);
         if (objList.Count <= 0) return;
         //Set all objects as children of parent
         foreach (var obj in objList)
         {
+            Debug.Log(obj.name);
             AddToSelection(obj);
+        }
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
         }
     }
 
@@ -322,11 +376,14 @@ public class SelectionManager : MonoBehaviour
     {
         var oldList = Selection.ToList();
         ClearSelection();
-        foreach (var obj in oldList)
+        using (new UndoTransaction("Delete selection"))
         {
-            RemoveFromSelection(obj);
-            Destroy(obj.gameObject);
-            //Debug.Log("Destroy!");
+            foreach (var obj in oldList)
+            {
+                if (!obj.canDestroy) continue;
+                RemoveFromSelection(obj);
+                obj.DoDestroy();
+            }
         }
 
         if (OnSelectionChanged != null)
@@ -343,12 +400,7 @@ public class SelectionManager : MonoBehaviour
 
     public void SelectAll()
     {
-        SetMultiSelection(LevelManager.instance.LevelObjects);
-
-        if (OnSelectionChanged != null)
-        {
-            OnSelectionChanged();
-        }
+        SetMultiSelection(LevelManager.Instance.LevelObjects);
     }
 
     private void UpdateTransform()
@@ -382,6 +434,39 @@ public class SelectionManager : MonoBehaviour
         prevPos = transform.position;
     }
 
+    public void TransformSelectionEnd(PosRotSize posRotSize)
+    {
+        UndoRedoManager.Instance().Push(TransformSelectionEnd, new PosRotSize((prevPosRotSize.Pos - posRotSize.Pos) - transform.position, (prevPosRotSize.Rot - posRotSize.Rot) - transform.eulerAngles, (prevPosRotSize.Size - posRotSize.Size) - transform.localScale), "Transform selection");
+        var selection = Selection.ToList();
+        foreach (var child in selection)
+        {
+            child.transform.position += posRotSize.Pos;
+            if (child.Rotateable)
+            child.transform.eulerAngles += posRotSize.Rot;
+            if (child.Scaleable)
+            child.transform.localScale += posRotSize.Size;
+        }
+
+        CenterSelf();
+    }
+
+    public void CreateObject(GameObject spawnObject)
+    {
+        if (spawnObject.GetComponent<LevelObject>() == null) return;
+        var obj = Instantiate(spawnObject);
+        var lvlObj = obj.GetComponent<LevelObject>();
+        obj.SetActive(true);
+        obj.transform.position = CameraManager.Instance.GetTarget();
+        CameraManager.Instance.SetTarget(obj.transform);
+        obj.name = spawnObject.name;
+        obj.transform.parent = LevelManager.Instance.transform;
+        using (new UndoTransaction("Create object"))
+        {
+            SetSelection(obj.transform);
+            UndoRedoManager.Instance().Push(lvlObj.DoDestroy, obj.activeSelf);
+        }
+    }
+
     private void DragSelection()
     {
         if (GetMouseButtonDown(0))
@@ -392,7 +477,7 @@ public class SelectionManager : MonoBehaviour
 
         if (GetMouseButton(0))
         {
-            if (Vector2.Distance(mousePos, prevMouse) > 10 && CameraManager.instance.cameraState == CameraManager.CameraState.Free && !isTransforming)
+            if (Vector2.Distance(mousePos, prevMouse) > 10 && CameraManager.Instance.cameraState == CameraManager.CameraState.Free && !isTransforming)
             {
                 shouldDrawBox = true;
             }
@@ -424,9 +509,10 @@ public class SelectionManager : MonoBehaviour
     {
         var selected = new List<LevelObject>();
 
-        foreach (var child in LevelManager.instance.LevelObjects)
+        foreach (var child in LevelManager.Instance.LevelObjects)
         {
-            var point = CameraManager.instance.Camera.WorldToScreenPoint(child.transform.position);
+            var point = CameraManager.Instance.Camera.WorldToScreenPoint(child.transform.position);
+            if (point.z < 0) continue;
             point.y = Mathf.Abs(point.y - Screen.height);
 
             if (box.Contains(point))
@@ -438,6 +524,12 @@ public class SelectionManager : MonoBehaviour
         Debug.Log(selected.Count);
 
         ClearSelection();
+
+        if (OnSelectionChanged != null)
+        {
+            OnSelectionChanged();
+        }
+
         SetMultiSelection(selected);
 
         if (OnSelectionChanged != null)
@@ -473,5 +565,19 @@ public class SelectionManager : MonoBehaviour
     private bool GetMouseButtonUp(int button)
     {
         return Input.GetMouseButtonUp(button);
+    }
+}
+
+public class PosRotSize
+{
+    public Vector3 Pos { get; set; }
+    public Vector3 Rot { get; set; }
+    public Vector3 Size { get; set; }
+
+    public PosRotSize(Vector3 pos, Vector3 rot, Vector3 size)
+    {
+        Pos = pos;
+        Rot = rot;
+        Size = size;
     }
 }

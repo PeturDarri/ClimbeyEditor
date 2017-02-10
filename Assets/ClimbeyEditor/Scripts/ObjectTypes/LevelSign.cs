@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UndoMethods;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Sign : LevelObject
+public class LevelSign : LevelObject
 {
     private string _text;
     public string SignText
@@ -18,37 +17,35 @@ public class Sign : LevelObject
         }
     }
 
+    public int Checkpoints { get; set; }
+    public LevelManager.GamemodeType Gamemode { get; set; }
+
+    private void Awake()
+    {
+        SignText = "LevelSign";
+    }
+
     public override LevelManager.Block GetObject()
     {
-        var newBlock = new LevelManager.SignBlock()
+        var newBlock = new LevelManager.SettingsBlock()
         {
-            Type = "Sign",
+            Type = "LevelSign",
             Size = transform.localScale,
             Position = transform.position,
             Rotation = transform.rotation,
             LockX = LockX,
             LockY = LockY,
             LockZ = LockZ,
-            text = SignText
+            Checkpoints = Checkpoints,
+            Gamemode = Gamemode
         };
 
         return newBlock;
     }
 
-    public override List<LevelObject> Duplicate()
-    {
-        var dupe = Instantiate(transform, transform.parent);
-        dupe.name = name;
-        dupe.position = transform.position;
-        var sign = dupe.GetComponent<Sign>();
-        sign.SignText = SignText;
-        var newList = new List<LevelObject> {sign};
-        return newList;
-    }
-
     public override Dictionary<string, object> GetProperties()
     {
-        return new Dictionary<string, object> {{"SignText", SignText}};
+        return new Dictionary<string, object> {{"Checkpoints", Checkpoints}, {"Gamemode", Gamemode}};
     }
 
     public void UpdateText()

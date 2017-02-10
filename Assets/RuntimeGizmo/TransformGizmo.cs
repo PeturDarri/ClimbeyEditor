@@ -63,7 +63,7 @@ namespace RuntimeGizmos
 
         void Start()
         {
-            SelectionManager.instance.OnSelectionChanged += OnSelectionChanged;
+            SelectionManager.Instance.OnSelectionChanged += OnSelectionChanged;
         }
 
         void Update()
@@ -154,14 +154,14 @@ namespace RuntimeGizmos
         //Events
         void OnSelectionChanged()
         {
-            if (SelectionManager.instance.isEmpty)
+            if (SelectionManager.Instance.isEmpty)
             {
                 target = null;
             }
             else
             {
-                target = SelectionManager.instance.transform;
-                emptySelection = SelectionManager.instance.emptySelection;
+                target = SelectionManager.Instance.transform;
+                emptySelection = SelectionManager.Instance.emptySelection;
             }
         }
 
@@ -177,7 +177,7 @@ namespace RuntimeGizmos
             Vector3 projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
             Vector3 previousMousePosition = Vector3.zero;
 
-            while(!GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
+            while(!GetMouseButtonUp(0) && CameraManager.Instance.cameraState == CameraManager.CameraState.Free)
             {
                 Ray mouseRay = myCamera.ScreenPointToRay(Input.mousePosition);
                 Vector3 mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction, originalTargetPosition, planeNormal);
@@ -251,7 +251,7 @@ namespace RuntimeGizmos
             {
                 RaycastHit hitInfo;
                 Physics.Raycast(myCamera.ScreenPointToRay(Input.mousePosition), out hitInfo);
-                SelectionManager.instance.SetSelection(hitInfo.transform);
+                SelectionManager.Instance.SetSelection(hitInfo.transform);
             }
         }
 

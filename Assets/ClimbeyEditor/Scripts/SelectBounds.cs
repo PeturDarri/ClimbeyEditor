@@ -25,6 +25,7 @@ public class SelectBounds : MonoBehaviour
     private float moveSpeedMultiplier = 1;
     private float scaleSpeedMultiplier = 1;
     private bool symmetrical;
+    private bool ratio;
     private enum MoveType
     {
         Stretch,
@@ -34,7 +35,7 @@ public class SelectBounds : MonoBehaviour
 
     private Transform select
     {
-        get { return SelectionManager.instance.transform; }
+        get { return SelectionManager.Instance.transform; }
     }
 
     private void OnGUI()
@@ -62,10 +63,11 @@ public class SelectBounds : MonoBehaviour
 
     private void Update()
     {
-        ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds && !SelectionManager.instance.isEmpty;
+        ShowHandles = GetComponent<TransformGizmo>().type == TransformType.Bounds && !SelectionManager.Instance.isEmpty;
         transformSpace = GetComponent<TransformGizmo>().space;
 
         symmetrical = Input.GetKey(KeyCode.LeftShift);
+        ratio = symmetrical && Input.GetKey(KeyCode.LeftAlt);
 
         if (ShowHandles)
         {
@@ -86,13 +88,13 @@ public class SelectBounds : MonoBehaviour
 
     private void UpdateBounds()
     {
-        bounds = SelectionManager.instance.GetBounds();
+        bounds = SelectionManager.Instance.GetBounds();
     }
 
     private void UpdateHandles()
     {
-        var newBounds = SelectionManager.instance.Selection.Count == 1
-            ? GetBoundsWithoutRotation(SelectionManager.instance.Selection[0].transform)
+        var newBounds = SelectionManager.Instance.Selection.Count == 1
+            ? GetBoundsWithoutRotation(SelectionManager.Instance.Selection[0].transform)
             : bounds;
         //Calculate handle locations
         handles.Clear();
@@ -155,12 +157,11 @@ public class SelectBounds : MonoBehaviour
         var originalTargetPosition = target.position;
         var planeNormal = (transform.position - target.position).normalized;
         var axis = (selectedHandle - target.position).normalized;
-        var projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
         var previousMousePosition = Vector3.zero;
-        var emptySelection = SelectionManager.instance.emptySelection;
+        var emptySelection = SelectionManager.Instance.emptySelection;
         GetComponent<TransformGizmo>().isTransforming = true;
 
-        while (!Input.GetMouseButtonUp(0) && CameraManager.instance.cameraState == CameraManager.CameraState.Free)
+        while (!Input.GetMouseButtonUp(0) && CameraManager.Instance.cameraState == CameraManager.CameraState.Free)
         {
             var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             var mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction,
@@ -168,6 +169,7 @@ public class SelectBounds : MonoBehaviour
 
             if (previousMousePosition != Vector3.zero && mousePosition != Vector3.zero)
             {
+                Vector3 projectedAxis;
                 if (moveType == MoveType.Move)
                 {
                     projectedAxis = (mousePosition - previousMousePosition).normalized;
@@ -176,7 +178,7 @@ public class SelectBounds : MonoBehaviour
                 }
                 else
                 {
-                    axis = transformSpace == TransformSpace.Global ? axis : (RotatePointAroundPivot(selectedHandle, originalTargetPosition, -select.eulerAngles) - originalTargetPosition).normalized;
+                    axis = ratio ? Vector3.one : transformSpace == TransformSpace.Global ? axis : (RotatePointAroundPivot(selectedHandle, originalTargetPosition, -select.eulerAngles) - originalTargetPosition).normalized;
                     projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
                     var scaleAmount =
                         ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) *
@@ -224,15 +226,15 @@ public class SelectBounds : MonoBehaviour
 
         GL.Begin( GL.LINES );
 
-        if(ShowBounds && !SelectionManager.instance.isEmpty)
+        if(ShowBounds && !SelectionManager.Instance.isEmpty)
         {
             GL.Color(LineColor);
             var selectBounds = bounds;
             selectBounds.center = select.position;
-            if (SelectionManager.instance.Selection.Count > 1)
+            if (SelectionManager.Instance.Selection.Count > 1)
                 DrawCube(selectBounds);
 
-            foreach (var child in SelectionManager.instance.Selection)
+            foreach (var child in SelectionManager.Instance.Selection)
             {
                 var childBounds = GetBoundsWithoutRotation(child.transform);
                 DrawCube(childBounds, child.transform.eulerAngles);

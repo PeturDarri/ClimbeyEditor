@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UndoMethods;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -10,15 +12,15 @@ using UnityEngine.UI;
 public class InspectorManager : MonoBehaviour
 {
 
-    public static InspectorManager instance;
+    public static InspectorManager Instance;
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
-        else if (instance != this)
+        else if (Instance != this)
         {
             Destroy(gameObject);
         }
@@ -26,12 +28,19 @@ public class InspectorManager : MonoBehaviour
 
     private void Start()
     {
-        SelectionManager.instance.OnSelectionChanged += UpdatePanel;
+        SelectionManager.Instance.OnSelectionChanged += UpdatePanel;
+        UndoRedoManager.Instance().UndoStackStatusChanged += UndoChanged;
+        UndoRedoManager.Instance().RedoStackStatusChanged += UndoChanged;
+    }
+
+    private void UndoChanged(bool nothing)
+    {
+        UpdatePanel();
     }
 
     private void UpdatePanel()
     {
-        var selection = SelectionManager.instance.Selection;
+        var selection = SelectionManager.Instance.Selection;
         ClearPanel();
         if (selection.Count == 0) return;
         CreateHeader(selection.Count > 1 ? selection.Count + " selected" : selection[0].Type.ToString());
@@ -56,26 +65,27 @@ public class InspectorManager : MonoBehaviour
 
         foreach (var field in properties)
         {
-            if (field.Key == "Shape")
+            if (field.Value is Enum)
             {
                 var template = Instantiate((GameObject) Resources.Load("Unloadables/UI/Dropdown Template"),
                     transform);
                 template.transform.localScale = Vector3.one;
-                template.GetComponentInChildren<Text>().text = "Shape";
+                template.GetComponentInChildren<Text>().text = field.Key;
                 var dropdown = template.GetComponentInChildren<Dropdown>();
 
                 dropdown.options.Clear();
-                //Go through all existing shapes and create the option list
-                foreach (var shape in Enum.GetValues(typeof(Shape)).Cast<Shape>())
+
+                var num = Enum.GetValues(field.Value.GetType());
+                foreach (var theEnum in num)
                 {
-                    dropdown.options.Add(new Dropdown.OptionData(shape.ToString()));
+                    dropdown.options.Add(new Dropdown.OptionData(theEnum.ToString()));
                 }
 
                 dropdown.captionText.text = selection.Count > 1 ? "--" : field.Value.ToString();
                 dropdown.value = Enum.GetValues(typeof(Shape)).Cast<Shape>().ToList().IndexOf((Shape) field.Value);
                 dropdown.onValueChanged.AddListener(delegate { FieldChanged("Shape", dropdown.value); });
             }
-            else if (field.Value is string || field.Value is int || field.Value is float)
+            else if (field.Value is string)
             {
                 var template = Instantiate((GameObject) Resources.Load("Unloadables/UI/Text Template"), transform);
                 template.transform.localScale = Vector3.one;
@@ -83,7 +93,29 @@ public class InspectorManager : MonoBehaviour
                 var text = template.GetComponentInChildren<InputField>();
                 var fieldString = field.Key;
                 text.text = selection.Count > 1 ? "--" : field.Value.ToString();
-                text.onValueChanged.AddListener(delegate { FieldChanged(fieldString, Convert.ToInt32(text.text)); });
+                text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, text.text); });
+            }
+            else if (field.Value is int)
+            {
+                var template = Instantiate((GameObject) Resources.Load("Unloadables/UI/Text Template"), transform);
+                template.transform.localScale = Vector3.one;
+                template.GetComponentInChildren<Text>().text = field.Key;
+                var text = template.GetComponentInChildren<InputField>();
+                text.contentType = InputField.ContentType.IntegerNumber;
+                text.text = selection.Count > 1 ? "--" : field.Value.ToString();
+                var fieldString = field.Key;
+                text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, Convert.ToInt32(text.text)); });
+            }
+            else if (field.Value is float)
+            {
+                var template = Instantiate((GameObject) Resources.Load("Unloadables/UI/Text Template"), transform);
+                template.transform.localScale = Vector3.one;
+                template.GetComponentInChildren<Text>().text = field.Key;
+                var text = template.GetComponentInChildren<InputField>();
+                text.contentType = InputField.ContentType.DecimalNumber;
+                text.text = selection.Count > 1 ? "--" : field.Value.ToString();
+                var fieldString = field.Key;
+                text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, float.Parse(text.text)); });
             }
             else if (field.Value is bool)
             {
@@ -124,17 +156,26 @@ public class InspectorManager : MonoBehaviour
     }
 
     //Events
-    private static void FieldChanged(string field, object value)
+    private void FieldChanged(string field, object value)
     {
-        foreach (var select in SelectionManager.instance.Selection.ToList())
+        foreach (var select in SelectionManager.Instance.Selection.ToList())
         {
-            select.GetType().GetProperty(field).SetValue(select, value, null);
+            var selectSave = select;
+            SetProperty(field, selectSave, value);
         }
+
+        UpdatePanel();
+    }
+
+    private static void SetProperty(string property, object obj, object value)
+    {
+        UndoRedoManager.Instance().Push(v=>SetProperty(property, obj, v), obj.GetType().GetProperty(property).GetValue(obj, null), "Change " + property);
+        obj.GetType().GetProperty(property).SetValue(obj, value, null);
     }
 
     private static void ButtonPressed(Delegate method)
     {
-        foreach (var select in SelectionManager.instance.Selection.ToList())
+        foreach (var select in SelectionManager.Instance.Selection.ToList())
         {
             method.DynamicInvoke();
         }

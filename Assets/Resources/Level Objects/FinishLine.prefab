@@ -207,5 +207,9 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Rotateable: 1
   Scaleable: 0
   TypeString: FinishLine
+  _startScale: {x: 0, y: 0, z: 0}
+  _startRot: {x: 0, y: 0, z: 0}
+  canDestroy: 0

@@ -3,13 +3,13 @@ using System.Collections;
 
 public class CameraManager : MonoBehaviour
 {
-    public static CameraManager instance;
+    public static CameraManager Instance;
     public CameraState cameraState;
     private MouseOrbit orbitScript;
 
     public Camera Camera
     {
-        get { return instance.GetComponent<Camera>(); }
+        get { return Instance.GetComponent<Camera>(); }
     }
 
     public enum CameraState {Free, Orbit, Pan, Fly}
@@ -17,9 +17,9 @@ public class CameraManager : MonoBehaviour
     // Use this for initialization
 	void Awake ()
 	{
-	    if (instance == null)
-	        instance = this;
-	    else if (instance != this)
+	    if (Instance == null)
+	        Instance = this;
+	    else if (Instance != this)
 	        Destroy(gameObject);
 
 	    DontDestroyOnLoad(gameObject);

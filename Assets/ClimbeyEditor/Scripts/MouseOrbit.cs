@@ -45,7 +45,7 @@ public class MouseOrbit : MonoBehaviour
 
         if (isActivated)
         {
-            CameraManager.instance.cameraState = CameraManager.CameraState.Orbit;
+            CameraManager.Instance.cameraState = CameraManager.CameraState.Orbit;
             //  get the distance the mouse moved in the respective direction
 
             x += Input.GetAxis("Mouse X") * rotateSpeed;
@@ -80,7 +80,7 @@ public class MouseOrbit : MonoBehaviour
             //Pan camera with scrollwheel
             if (Input.GetMouseButton(2) || Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
             {
-                CameraManager.instance.cameraState = CameraManager.CameraState.Pan;
+                CameraManager.Instance.cameraState = CameraManager.CameraState.Pan;
                 x = (Input.GetAxis("Mouse X") * panSpeed) * (distance / 12);
                 y = (Input.GetAxis("Mouse Y") * panSpeed) * (distance / 12);
                 target -= transform.right * x;

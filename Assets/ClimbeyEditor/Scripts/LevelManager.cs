@@ -2,9 +2,11 @@
 using System.Linq;
 using System;
 using System.IO;
+using System.Net;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using SFB;
+using UndoMethods;
 
 public class LevelManager : MonoBehaviour
 {
@@ -47,7 +49,7 @@ public class LevelManager : MonoBehaviour
     [Serializable]
     public class SettingsBlock : Block
     {
-        public int Checkpoints = 3;
+        public int Checkpoints;
         public GamemodeType Gamemode;
     }
 
@@ -90,7 +92,7 @@ public class LevelManager : MonoBehaviour
         public ClimbeyGroup[] GroupsArray;
     }
 
-    public static LevelManager instance;
+    public static LevelManager Instance;
     public Level mainLevel;
 
     public List<LevelObject> LevelObjects
@@ -123,17 +125,17 @@ public class LevelManager : MonoBehaviour
     // Use this for initialization
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
-        else if (instance != this)
+        else if (Instance != this)
         {
             Destroy(gameObject);
         }
 
-        //Create standard start objects
-
+        //Load standard start level
+        LoadLevel("Assets/Resources/startlevel.txt");
     }
 
     public void SaveLevel(string levelName = "")
@@ -145,6 +147,7 @@ public class LevelManager : MonoBehaviour
 
         if (Blocks.Count == 0)
         {
+            ClearLists();
             return;
         }
 
@@ -189,8 +192,11 @@ public class LevelManager : MonoBehaviour
                 return;
             }
         }
-        SelectionManager.instance.SelectAll();
-        SelectionManager.instance.DeleteSelection();
+        SelectionManager.Instance.ClearSelection();
+        foreach (var obj in LevelObjects)
+        {
+            Destroy(obj.gameObject);
+        }
         var loadedLevel = new Level();
         JsonUtility.FromJsonOverwrite(File.ReadAllText(levelFile), loadedLevel);
 
@@ -209,6 +215,9 @@ public class LevelManager : MonoBehaviour
             blockComp.LockX = block.LockX;
             blockComp.LockY = block.LockY;
             blockComp.LockZ = block.LockZ;
+
+            if (block.Type == "[CameraRig]")
+                CameraManager.Instance.Camera.GetComponent<MouseOrbit>().Focus(newBlock.transform);
         }
 
         if (loadedLevel.SignsArray != null && loadedLevel.SignsArray.Any())
@@ -250,7 +259,6 @@ public class LevelManager : MonoBehaviour
         if (loadedLevel.ZiplinesArray != null && loadedLevel.ZiplinesArray.Any())
             foreach (var zip in loadedLevel.ZiplinesArray)
             {
-                Debug.Log(zip.Type);
                 var prefab = (GameObject) Resources.Load("Level Objects/" + zip.Type);
                 if (prefab == null) continue;
                 var newBlock = Instantiate(prefab, transform);
@@ -262,7 +270,6 @@ public class LevelManager : MonoBehaviour
         if (loadedLevel.MovingArray != null && loadedLevel.MovingArray.Any())
             foreach (var move in loadedLevel.MovingArray)
             {
-                Debug.Log(move.Type);
                 var prefab = (GameObject) Resources.Load("Level Objects/MovingBlock");
                 if (prefab == null) continue;
                 var emptyGroup = new GameObject("MovingBlockGroup");
@@ -272,6 +279,11 @@ public class LevelManager : MonoBehaviour
                 newBlock.transform.position = move.Position;
                 newBlock.transform.rotation = move.Rotation;
                 newBlock.transform.localScale = move.Size;
+                var newMove = newBlock.GetComponent<global::MovingBlock>();
+                newMove.ArrivalTime = move.ArrivalTime;
+                newMove.PingPong = move.PingPong;
+                newMove.Speed = move.Speed;
+                newMove.WaitForPlayer = move.WaitForPlayer;
 
                 if (move.Waypoints != null && move.Waypoints.Any())
                 foreach (var waypoint in move.Waypoints)
@@ -283,43 +295,46 @@ public class LevelManager : MonoBehaviour
                     newWay.transform.rotation = waypoint.Rotation;
                 }
             }
-        
+        if (loadedLevel.LevelSettings != null)
+        {
+            var prefab = (GameObject) Resources.Load("Level Objects/LevelSign");
+            var newBlock = Instantiate(prefab, transform);
+            newBlock.transform.position = loadedLevel.LevelSettings.Position;
+            newBlock.transform.rotation = loadedLevel.LevelSettings.Rotation;
+            newBlock.transform.localScale = Vector3.one;
+            var settings = newBlock.GetComponent<LevelSign>();
+            settings.Checkpoints = loadedLevel.LevelSettings.Checkpoints;
+            settings.Gamemode = loadedLevel.LevelSettings.Gamemode;
+        }
+
+        SelectionManager.Instance.ClearSelection();
+        UndoRedoManager.Instance().Clear();
     }
 
     public void RegisterObject(Block obj)
     {
         if (obj == null) return;
-        Blocks.Add(obj);
-    }
-
-    public void RegisterObject(MovingBlock obj)
-    {
-        if (obj == null) return;
-        MovingBlocks.Add(obj);
-    }
-
-    public void RegisterObject(SignBlock obj)
-    {
-        if (obj == null) return;
-        SignBlocks.Add(obj);
-    }
-
-    public void RegisterObject(ZiplineBlock obj)
-    {
-        if (obj == null) return;
-        ZiplineBlocks.Add(obj);
-    }
-
-    public void RegisterObject(LightBlock obj)
-    {
-        if (obj == null) return;
-        LightBlocks.Add(obj);
-    }
-
-    public void RegisterObject(ClimbeyGroup obj)
-    {
-        if (obj == null) return;
-        Groups.Add(obj);
+        switch (obj.GetType().ToString())
+        {
+            case "LevelManager+Block":
+                Blocks.Add(obj);
+                break;
+            case "LevelManager+SignBlock":
+                SignBlocks.Add((SignBlock) obj);
+                break;
+            case "LevelManager+LightBlock":
+                LightBlocks.Add((LightBlock) obj);
+                break;
+            case "LevelManager+ZiplineBlock":
+                ZiplineBlocks.Add((ZiplineBlock) obj);
+                break;
+            case "LevelManager+MovingBlock":
+                MovingBlocks.Add((MovingBlock) obj);
+                break;
+            case "LevelManager+SettingsBlock":
+                Settings = (SettingsBlock)obj;
+                break;
+        }
     }
 
     private void ClearLists()

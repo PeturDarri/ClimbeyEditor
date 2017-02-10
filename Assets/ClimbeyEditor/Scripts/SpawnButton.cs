@@ -20,6 +20,6 @@ public class SpawnButton : MonoBehaviour
 
     void OnClick()
     {
-        ToolManager.instance.SpawnObject(spawnObject);
+        ToolManager.Instance.SpawnObject(spawnObject);
     }
 }

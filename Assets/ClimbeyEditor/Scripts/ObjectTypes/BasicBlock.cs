@@ -19,7 +19,7 @@ public class BasicBlock : LevelObject
     public override void Start()
     {
         base.Start();
-        GetComponent<MeshFilter>().mesh = LevelManager.instance.Shapes[(int)Shape];
+        GetComponent<MeshFilter>().mesh = LevelManager.Instance.Shapes[(int)Shape];
     }
 
     public override LevelManager.Block GetObject()
@@ -70,7 +70,7 @@ public class BasicBlock : LevelObject
     public Mesh UpdateShape()
     {
         var filter = GetComponent<MeshFilter>();
-        filter.mesh = LevelManager.instance.Shapes[(int) _shape];
-        return LevelManager.instance.Shapes[(int) _shape];
+        filter.mesh = LevelManager.Instance.Shapes[(int) _shape];
+        return LevelManager.Instance.Shapes[(int) _shape];
     }
 }

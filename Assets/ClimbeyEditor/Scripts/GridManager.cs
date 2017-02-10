@@ -4,7 +4,7 @@ using RuntimeGizmos;
 
 public class GridManager: MonoBehaviour
 {
-    public static GridManager instance;
+    public static GridManager Instance;
 
     // Vars
     private Vector3 prevPosition, prevRotation, prevSize;
@@ -22,11 +22,11 @@ public class GridManager: MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
-        else if (instance != this)
+        else if (Instance != this)
         {
             Destroy(gameObject);
         }
@@ -34,13 +34,13 @@ public class GridManager: MonoBehaviour
 
     private void Start()
     {
-        select = SelectionManager.instance.transform;
+        select = SelectionManager.Instance.transform;
     }
 
     private void Update()
     {
         if ( DoSnap
-             && !SelectionManager.instance.isEmpty
+             && !SelectionManager.Instance.isEmpty
              && (select.position != prevPosition || select.eulerAngles != prevRotation || select.localScale != prevSize))
         {
             AutoSnap();
@@ -69,11 +69,11 @@ public class GridManager: MonoBehaviour
     public void AutoSnap()
     {
         //Update the selection
-        SelectionManager.instance.TransformSelection();
+        SelectionManager.Instance.TransformSelection();
 
         //Get the selection bounds
-        var bounds = SelectionManager.instance.GetBounds();
-        bounds.center = SelectionManager.instance.transform.position;
+        var bounds = SelectionManager.Instance.GetBounds();
+        bounds.center = SelectionManager.Instance.transform.position;
 
         // Snap the max
         var t = bounds.max;

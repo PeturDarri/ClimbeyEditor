@@ -29,7 +29,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4174096721537118
 Transform:
   m_ObjectHideFlags: 1
@@ -114,4 +114,5 @@ MonoBehaviour:
   TypeString: 
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
+  canDestroy: 1
   _shape: 4
