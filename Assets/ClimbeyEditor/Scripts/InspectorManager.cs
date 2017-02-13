@@ -81,8 +81,18 @@ public class InspectorManager : MonoBehaviour
                     dropdown.options.Add(new Dropdown.OptionData(theEnum.ToString()));
                 }
 
-                dropdown.captionText.text = selection.Count > 1 ? "--" : field.Value.ToString();
+                var allSame = true;
+                foreach (var child in selection)
+                {
+                    var childProperties = child.GetProperties();
+                    if (childProperties[field.Key].ToString() != field.Value.ToString())
+                    {
+                        allSame = false;
+                    }
+                }
+
                 dropdown.value = Enum.GetValues(typeof(Shape)).Cast<Shape>().ToList().IndexOf((Shape) field.Value);
+                dropdown.captionText.text = allSame ? field.Value.ToString() : "--";
                 dropdown.onValueChanged.AddListener(delegate { FieldChanged("Shape", dropdown.value); });
             }
             else if (field.Value is string)
@@ -92,7 +102,18 @@ public class InspectorManager : MonoBehaviour
                 template.GetComponentInChildren<Text>().text = field.Key;
                 var text = template.GetComponentInChildren<InputField>();
                 var fieldString = field.Key;
-                text.text = selection.Count > 1 ? "--" : field.Value.ToString();
+
+                var allSame = true;
+                foreach (var child in selection)
+                {
+                    var childProperties = child.GetProperties();
+                    if (childProperties[field.Key].ToString() != field.Value.ToString())
+                    {
+                        allSame = false;
+                    }
+                }
+
+                text.text = allSame ? field.Value.ToString() : "--";
                 text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, text.text); });
             }
             else if (field.Value is int)
@@ -102,7 +123,18 @@ public class InspectorManager : MonoBehaviour
                 template.GetComponentInChildren<Text>().text = field.Key;
                 var text = template.GetComponentInChildren<InputField>();
                 text.contentType = InputField.ContentType.IntegerNumber;
-                text.text = selection.Count > 1 ? "--" : field.Value.ToString();
+
+                var allSame = true;
+                foreach (var child in selection)
+                {
+                    var childProperties = child.GetProperties();
+                    if (childProperties[field.Key].ToString() != field.Value.ToString())
+                    {
+                        allSame = false;
+                    }
+                }
+
+                text.text = allSame ? field.Value.ToString() : "--";
                 var fieldString = field.Key;
                 text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, Convert.ToInt32(text.text)); });
             }
@@ -113,7 +145,18 @@ public class InspectorManager : MonoBehaviour
                 template.GetComponentInChildren<Text>().text = field.Key;
                 var text = template.GetComponentInChildren<InputField>();
                 text.contentType = InputField.ContentType.DecimalNumber;
-                text.text = selection.Count > 1 ? "--" : field.Value.ToString();
+
+                var allSame = true;
+                foreach (var child in selection)
+                {
+                    var childProperties = child.GetProperties();
+                    if (childProperties[field.Key].ToString() != field.Value.ToString())
+                    {
+                        allSame = false;
+                    }
+                }
+
+                text.text = allSame ? field.Value.ToString() : "--";
                 var fieldString = field.Key;
                 text.onEndEdit.AddListener(delegate { FieldChanged(fieldString, float.Parse(text.text)); });
             }
@@ -124,7 +167,17 @@ public class InspectorManager : MonoBehaviour
                 template.GetComponentInChildren<Text>().text = field.Key;
                 var toggle = template.GetComponentInChildren<Toggle>();
                 var fieldString = field.Key;
-                toggle.isOn = selection.Count == 1 && (bool)field.Value;
+
+                var allSame = true;
+                foreach (var child in selection)
+                {
+                    var childProperties = child.GetProperties();
+                    if (childProperties[field.Key].ToString() != field.Value.ToString())
+                    {
+                        allSame = false;
+                    }
+                }
+                toggle.isOn = allSame && (bool)field.Value;
                 toggle.onValueChanged.AddListener(delegate { FieldChanged(fieldString, toggle.isOn); });
             }
             else if (field.Value is Delegate)

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class Sign : LevelObject
 {
-    private string _text;
+    private string _text = "";
     public string SignText
     {
         get { return _text; }

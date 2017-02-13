@@ -207,7 +207,7 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
-  Rotateable: 1
+  Rotateable: 0
   Scaleable: 0
   TypeString: '[CameraRig]'
   _startScale: {x: 0, y: 0, z: 0}

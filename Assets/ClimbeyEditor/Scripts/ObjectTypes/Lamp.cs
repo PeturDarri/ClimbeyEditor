@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UndoMethods;
 using UnityEngine;
 
 public class Lamp : BasicBlock
@@ -101,6 +102,7 @@ public class Lamp : BasicBlock
         lamp.Hidden = Hidden;
         lamp.Shape = Shape;
         lamp._prevShape = _prevShape;
+        UndoRedoManager.Instance().Push(lamp.DoDestroy, newObj.activeSelf, "Duplicate object");
 
         return new List<LevelObject> {lamp};
     }

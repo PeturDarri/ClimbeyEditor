@@ -1,9 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UndoMethods;
 
 public class PoleBlock : LevelObject
 {
-    public Zipline ParentZip;
+    public Zipline ParentZip
+    {
+        get { return transform.parent.GetComponentInChildren<Zipline>(); }
+    }
 
     public Transform Pivot
     {
@@ -35,6 +39,12 @@ public class PoleBlock : LevelObject
         return null;
     }
 
+    public override void DoDestroy(bool destroy = true)
+    {
+        UndoRedoManager.Instance().Push(DoDestroy, !destroy);
+        transform.parent.gameObject.SetActive(!destroy);
+    }
+
     public override void OnDestroy()
     {
         base.OnDestroy();
@@ -45,8 +55,8 @@ public class PoleBlock : LevelObject
     {
         if (!ParentZip.canDupe) return null;
         ParentZip.canDupe = false;
-        var newZip = Instantiate(ParentZip, transform.parent);
-        newZip.name = ParentZip.name;
-        return new List<LevelObject> {newZip.PoleBlocks[0], newZip.PoleBlocks[1]};
+        var newZip = Instantiate(transform.parent, transform.parent);
+        newZip.name = transform.parent.name;
+        return new List<LevelObject> {newZip.GetComponentInChildren<Zipline>().PoleBlocks[0], newZip.GetComponentInChildren<Zipline>().PoleBlocks[1]};
     }
 }

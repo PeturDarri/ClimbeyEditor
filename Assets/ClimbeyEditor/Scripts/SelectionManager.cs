@@ -93,7 +93,7 @@ public class SelectionManager : MonoBehaviour
         _prevSelection = Selection.ToList();
     }
 
-    private void ClearAndMulti(List<LevelObject> objList)
+    public void ClearAndMulti(List<LevelObject> objList)
     {
         ClearSelection();
         SetMultiSelection(objList);
@@ -178,6 +178,7 @@ public class SelectionManager : MonoBehaviour
 
     private void Snap()
     {
+        Debug.Log("SNAP");
         TransformSelection();
     }
 
@@ -198,16 +199,16 @@ public class SelectionManager : MonoBehaviour
         prevPosRotSize = new PosRotSize(transform.position, transform.eulerAngles, transform.localScale);
     }
 
-    private void CenterSelf()
+    public void CenterSelf()
     {
         //Set parent position to center of all children
         var bounds = GetBounds();
         //transform.localScale = bounds.size;
         transform.position = transform.position + bounds.center;
-        transform.localScale = bounds.size;
+        transform.localScale = Selection.Count == 1 ? Selection[0].transform.localScale : bounds.size;
         transform.eulerAngles = GetChildRotation();
         emptySelection.position = emptySelection.position + bounds.center;
-        emptySelection.localScale = bounds.size;
+        emptySelection.localScale = Selection.Count == 1 ? Selection[0].transform.localScale : bounds.size;
         emptySelection.eulerAngles = GetChildRotation();
         ResetPrev();
 
@@ -281,10 +282,6 @@ public class SelectionManager : MonoBehaviour
                 //Redo
                 UndoRedoManager.Instance().Redo();
             }
-            else if (Input.GetKeyDown(KeyCode.C))
-            {
-                Debug.Log("Undo = " + UndoRedoManager.Instance().UndoOperationCount);
-            }
         }
         else
         {
@@ -340,12 +337,10 @@ public class SelectionManager : MonoBehaviour
 
     public void SetMultiSelection(List<LevelObject> objList)
     {
-        Debug.Log(objList.Count);
         if (objList.Count <= 0) return;
         //Set all objects as children of parent
         foreach (var obj in objList)
         {
-            Debug.Log(obj.name);
             AddToSelection(obj);
         }
 
@@ -370,8 +365,7 @@ public class SelectionManager : MonoBehaviour
             //Reset rotation
             var curRot = child.transform.rotation;
             child.transform.rotation = (local) ? Quaternion.identity : curRot;
-            var collide = child.GetComponent<Collider>();
-            bounds.Encapsulate(collide.bounds);
+            bounds.Encapsulate(child.GetBounds());
             child.transform.rotation = curRot;
         }
 
@@ -408,20 +402,20 @@ public class SelectionManager : MonoBehaviour
     public void DeleteSelection()
     {
         var oldList = Selection.ToList();
-        ClearSelection();
         using (new UndoTransaction("Delete selection"))
         {
+            ClearSelection();
             foreach (var obj in oldList)
             {
                 if (!obj.canDestroy) continue;
                 RemoveFromSelection(obj);
                 obj.DoDestroy();
             }
-        }
 
-        if (OnSelectionChanged != null)
-        {
-            OnSelectionChanged();
+            if (OnSelectionChanged != null)
+            {
+                OnSelectionChanged();
+            }
         }
     }
 
@@ -469,6 +463,7 @@ public class SelectionManager : MonoBehaviour
 
     public void TransformSelectionEnd(PosRotSize posRotSize)
     {
+        Debug.Log("TRANSFORM END");
         UndoRedoManager.Instance().Push(TransformSelectionEnd, new PosRotSize((prevPosRotSize.Pos - posRotSize.Pos) - transform.position, (prevPosRotSize.Rot - posRotSize.Rot) - transform.eulerAngles, (prevPosRotSize.Size - posRotSize.Size) - transform.localScale), "Transform selection");
         var selection = Selection.ToList();
         foreach (var child in selection)
@@ -486,13 +481,12 @@ public class SelectionManager : MonoBehaviour
     public void CreateObject(GameObject spawnObject)
     {
         if (spawnObject.GetComponent<LevelObject>() == null) return;
-        var obj = Instantiate(spawnObject);
+        var obj = Instantiate(spawnObject, LevelManager.Instance.transform);
         var lvlObj = obj.GetComponent<LevelObject>();
         obj.SetActive(true);
         obj.transform.position = CameraManager.Instance.GetTarget();
         CameraManager.Instance.SetTarget(obj.transform);
         obj.name = spawnObject.name;
-        obj.transform.parent = LevelManager.Instance.transform;
         using (new UndoTransaction("Create object"))
         {
             SetSelection(obj.transform);
@@ -553,8 +547,6 @@ public class SelectionManager : MonoBehaviour
                 selected.Add(child);
             }
         }
-
-        Debug.Log(selected.Count);
 
         ClearSelection();
 

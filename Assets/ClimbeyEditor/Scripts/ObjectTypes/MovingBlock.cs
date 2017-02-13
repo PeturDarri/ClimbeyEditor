@@ -28,6 +28,16 @@ public class MovingBlock : LevelObject
     private bool isPreviewing;
     public LineRenderer _lr;
 
+    public override void Start()
+    {
+        base.Start();
+        //Make sure we are in a group
+        if (transform.parent != LevelManager.Instance.transform) return;
+        var parent = new GameObject("MovingBlockGroup");
+        parent.transform.parent = LevelManager.Instance.transform;
+        transform.parent = parent.transform;
+    }
+
     public override LevelManager.Block GetObject()
     {
         var wayList = Waypoints.Select(way => way.VirtualBlock).ToList();

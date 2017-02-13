@@ -133,7 +133,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3558607c5ff5f34f9cb5b3e9e512638, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Type: 16
+  Type: 12
   LockX: 0
   LockY: 0
   LockZ: 0
@@ -143,4 +143,5 @@ MonoBehaviour:
   TypeString: 
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
+  canDestroy: 1
   ParentZip: {fileID: 0}

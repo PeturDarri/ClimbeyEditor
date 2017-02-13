@@ -94,7 +94,7 @@ public class SelectBounds : MonoBehaviour
     private void UpdateHandles()
     {
         var newBounds = SelectionManager.Instance.Selection.Count == 1
-            ? GetBoundsWithoutRotation(SelectionManager.Instance.Selection[0].transform)
+            ? GetBoundsWithoutRotation(SelectionManager.Instance.Selection[0])
             : bounds;
         //Calculate handle locations
         handles.Clear();
@@ -153,10 +153,10 @@ public class SelectBounds : MonoBehaviour
 
     private IEnumerator ScaleHandleRoutine()
     {
+        var handle = (RotatePointAroundPivot(selectedHandle, select.position, -select.eulerAngles) - select.position).normalized;
         var target = select;
         var originalTargetPosition = target.position;
         var planeNormal = (transform.position - target.position).normalized;
-        var axis = (selectedHandle - target.position).normalized;
         var previousMousePosition = Vector3.zero;
         var emptySelection = SelectionManager.Instance.emptySelection;
         GetComponent<TransformGizmo>().isTransforming = true;
@@ -178,17 +178,18 @@ public class SelectBounds : MonoBehaviour
                 }
                 else
                 {
-                    axis = ratio ? Vector3.one : transformSpace == TransformSpace.Global ? axis : (RotatePointAroundPivot(selectedHandle, originalTargetPosition, -select.eulerAngles) - originalTargetPosition).normalized;
-                    projectedAxis = Vector3.ProjectOnPlane(axis, planeNormal).normalized;
+                    var axis = ratio ? Vector3.one : handle;
+
+                    projectedAxis = Vector3.ProjectOnPlane((selectedHandle - originalTargetPosition).normalized, planeNormal).normalized;
                     var scaleAmount =
                         ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) *
                         scaleSpeedMultiplier;
                     var positive = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
-                    emptySelection.localScale += (positive * scaleAmount);
+                    emptySelection.localScale += positive * scaleAmount;
 
                     if (!symmetrical)
                     {
-                        emptySelection.position +=(selectedHandle - originalTargetPosition).normalized * scaleAmount / 2;
+                        emptySelection.position += (selectedHandle - originalTargetPosition).normalized * scaleAmount / 2;
                     }
                     else
                     {
@@ -203,12 +204,13 @@ public class SelectBounds : MonoBehaviour
         GetComponent<TransformGizmo>().isTransforming = false;
     }
 
-    private Bounds GetBoundsWithoutRotation(Transform obj)
+
+    private Bounds GetBoundsWithoutRotation(LevelObject obj)
     {
-        var prevRot = obj.rotation;
-        obj.rotation = Quaternion.identity;
-        var bound = obj.GetComponent<Collider>().bounds;
-        obj.rotation = prevRot;
+        var prevRot = obj.transform.rotation;
+        obj.transform.rotation = Quaternion.identity;
+        var bound = obj.GetBounds();
+        obj.transform.rotation = prevRot;
         return bound;
     }
 
@@ -236,7 +238,7 @@ public class SelectBounds : MonoBehaviour
 
             foreach (var child in SelectionManager.Instance.Selection)
             {
-                var childBounds = GetBoundsWithoutRotation(child.transform);
+                var childBounds = GetBoundsWithoutRotation(child);
                 DrawCube(childBounds, child.transform.eulerAngles);
             }
         }

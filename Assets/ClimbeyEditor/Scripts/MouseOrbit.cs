@@ -32,7 +32,7 @@ public class MouseOrbit : MonoBehaviour
 
 
         // only update if the mousebutton is held down
-        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.LeftControl))
+        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftShift))
         {
             isActivated = true;
         }

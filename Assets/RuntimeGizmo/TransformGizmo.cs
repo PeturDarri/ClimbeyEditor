@@ -16,7 +16,6 @@ namespace RuntimeGizmos
         public KeyCode SetBoundType = KeyCode.Q;
         public KeyCode SetMoveType = KeyCode.W;
         public KeyCode SetRotateType = KeyCode.E;
-        public KeyCode SetScaleType = KeyCode.R;
         public KeyCode SetSpaceToggle = KeyCode.X;
 
         Color xColor = new Color(1, 0, 0, 0.8f);
@@ -27,22 +26,18 @@ namespace RuntimeGizmos
 
         float handleLength = .25f;
         float triangleSize = .03f;
-        float boxSize = .01f;
         int circleDetail = 40;
         float minSelectedDistanceCheck = .04f;
         float moveSpeedMultiplier = 1f;
-        float scaleSpeedMultiplier = 1f;
         float rotateSpeedMultiplier = 200f;
         float allRotateSpeedMultiplier = 20f;
 
         AxisVectors handleLines = new AxisVectors();
         AxisVectors handleTriangles = new AxisVectors();
-        AxisVectors handleSquares = new AxisVectors();
         AxisVectors circlesLines = new AxisVectors();
         AxisVectors drawCurrentCirclesLines = new AxisVectors();
 
         public bool isTransforming;
-        float totalScaleAmount;
         Quaternion totalRotationAmount;
         Axis selectedAxis = Axis.None;
         AxisInfo axisInfo;
@@ -104,11 +99,6 @@ namespace RuntimeGizmos
             DrawTriangles(handleTriangles.y, yColor);
             DrawTriangles(handleTriangles.z, zColor);
 
-            DrawSquares(handleSquares.x, xColor);
-            DrawSquares(handleSquares.y, yColor);
-            DrawSquares(handleSquares.z, zColor);
-            DrawSquares(handleSquares.all, allColor);
-
             AxisVectors rotationAxisVector = circlesLines;
             if(isTransforming && space == TransformSpace.Global && type == TransformType.Rotate)
             {
@@ -132,15 +122,12 @@ namespace RuntimeGizmos
             if(Input.GetKeyDown(SetMoveType)) type = TransformType.Move;
             else if(Input.GetKeyDown(SetBoundType)) type = TransformType.Bounds;
             else if(Input.GetKeyDown(SetRotateType)) type = TransformType.Rotate;
-            else if(Input.GetKeyDown(SetScaleType)) type = TransformType.Scale;
 
             if(Input.GetKeyDown(SetSpaceToggle))
             {
                 if(space == TransformSpace.Global) space = TransformSpace.Local;
                 else if(space == TransformSpace.Local) space = TransformSpace.Global;
             }
-
-            if(type == TransformType.Scale) space = TransformSpace.Local; //Only support local scale
         }
 
         void TransformSelected()
@@ -168,7 +155,6 @@ namespace RuntimeGizmos
         IEnumerator TransformSelected(TransformType type)
         {
             isTransforming = true;
-            totalScaleAmount = 0;
             totalRotationAmount = Quaternion.identity;
 
             Vector3 originalTargetPosition = target.position;
@@ -188,19 +174,6 @@ namespace RuntimeGizmos
                     {
                         float moveAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projectedAxis) * moveSpeedMultiplier;
                         emptySelection.Translate(axis * moveAmount, Space.World);
-                    }
-
-                    if(type == TransformType.Scale)
-                    {
-                        Vector3 projected = (selectedAxis == Axis.Any) ? transform.right : projectedAxis;
-                        float scaleAmount = ExtVector3.MagnitudeInDirection(mousePosition - previousMousePosition, projected) * scaleSpeedMultiplier;
-
-                        Vector3 localAxis = (space == TransformSpace.Local && selectedAxis != Axis.Any) ? emptySelection.InverseTransformDirection(axis) : axis;
-
-                        if(selectedAxis == Axis.Any) emptySelection.localScale += (ExtVector3.Abs(emptySelection.localScale.normalized) * scaleAmount);
-                        else emptySelection.localScale += (localAxis * scaleAmount);
-
-                        totalScaleAmount += scaleAmount;
                     }
 
                     if(type == TransformType.Rotate)
@@ -225,7 +198,6 @@ namespace RuntimeGizmos
             }
 
             totalRotationAmount = Quaternion.identity;
-            totalScaleAmount = 0;
             isTransforming = false;
         }
 
@@ -264,31 +236,26 @@ namespace RuntimeGizmos
             float xClosestDistance = float.MaxValue;
             float yClosestDistance = float.MaxValue;
             float zClosestDistance = float.MaxValue;
-            float allClosestDistance = float.MaxValue;
             float minSelectedDistanceCheck = this.minSelectedDistanceCheck * GetDistanceMultiplier();
 
-            if(type == TransformType.Move || type == TransformType.Scale)
+            if(type == TransformType.Move)
             {
                 selectedLinesBuffer.Clear();
                 selectedLinesBuffer.Add(handleLines);
-                if(type == TransformType.Move) selectedLinesBuffer.Add(handleTriangles);
-                else if(type == TransformType.Scale) selectedLinesBuffer.Add(handleSquares);
+                selectedLinesBuffer.Add(handleTriangles);
 
                 xClosestDistance = ClosestDistanceFromMouseToLines(selectedLinesBuffer.x);
                 yClosestDistance = ClosestDistanceFromMouseToLines(selectedLinesBuffer.y);
                 zClosestDistance = ClosestDistanceFromMouseToLines(selectedLinesBuffer.z);
-                allClosestDistance = ClosestDistanceFromMouseToLines(selectedLinesBuffer.all);
             }
             else if(type == TransformType.Rotate)
             {
                 xClosestDistance = ClosestDistanceFromMouseToLines(circlesLines.x);
                 yClosestDistance = ClosestDistanceFromMouseToLines(circlesLines.y);
                 zClosestDistance = ClosestDistanceFromMouseToLines(circlesLines.z);
-                allClosestDistance = ClosestDistanceFromMouseToLines(circlesLines.all);
             }
 
-            if(type == TransformType.Scale && allClosestDistance <= minSelectedDistanceCheck) selectedAxis = Axis.Any;
-            else if(xClosestDistance <= minSelectedDistanceCheck && xClosestDistance <= yClosestDistance && xClosestDistance <= zClosestDistance) selectedAxis = Axis.X;
+            if(xClosestDistance <= minSelectedDistanceCheck && xClosestDistance <= yClosestDistance && xClosestDistance <= zClosestDistance) selectedAxis = Axis.X;
             else if(yClosestDistance <= minSelectedDistanceCheck && yClosestDistance <= xClosestDistance && yClosestDistance <= zClosestDistance) selectedAxis = Axis.Y;
             else if(zClosestDistance <= minSelectedDistanceCheck && zClosestDistance <= xClosestDistance && zClosestDistance <= yClosestDistance) selectedAxis = Axis.Z;
             else if(type == TransformType.Rotate && target != null)
@@ -320,14 +287,6 @@ namespace RuntimeGizmos
         {
             float size = handleLength * GetDistanceMultiplier();
             axisInfo.Set(target, size, space);
-
-            if(isTransforming && type == TransformType.Scale)
-            {
-                if(selectedAxis == Axis.Any) axisInfo.Set(target, size + totalScaleAmount, space);
-                if(selectedAxis == Axis.X) axisInfo.xAxisEnd += (axisInfo.xDirection * totalScaleAmount);
-                if(selectedAxis == Axis.Y) axisInfo.yAxisEnd += (axisInfo.yDirection * totalScaleAmount);
-                if(selectedAxis == Axis.Z) axisInfo.zAxisEnd += (axisInfo.zDirection * totalScaleAmount);
-            }
         }
 
         //This helps keep the size consistent no matter how far we are from it.
@@ -341,7 +300,6 @@ namespace RuntimeGizmos
         {
             SetHandleLines();
             SetHandleTriangles();
-            SetHandleSquares();
             SetCircles(axisInfo, circlesLines);
         }
 
@@ -349,7 +307,7 @@ namespace RuntimeGizmos
         {
             handleLines.Clear();
 
-            if(type == TransformType.Move || type == TransformType.Scale)
+            if(type == TransformType.Move)
             {
                 handleLines.x.Add(target.position);
                 handleLines.x.Add(axisInfo.xAxisEnd);
@@ -390,44 +348,6 @@ namespace RuntimeGizmos
                 resultsBuffer.Add(baseSquare[i]);
                 resultsBuffer.Add(baseSquare[i + 1]);
                 resultsBuffer.Add(endPoint);
-            }
-        }
-
-        void SetHandleSquares()
-        {
-            handleSquares.Clear();
-
-            if(type == TransformType.Scale)
-            {
-                float boxLength = boxSize * GetDistanceMultiplier();
-                AddSquares(axisInfo.xAxisEnd, axisInfo.xDirection, axisInfo.yDirection, axisInfo.zDirection, boxLength, handleSquares.x);
-                AddSquares(axisInfo.yAxisEnd, axisInfo.yDirection, axisInfo.xDirection, axisInfo.zDirection, boxLength, handleSquares.y);
-                AddSquares(axisInfo.zAxisEnd, axisInfo.zDirection, axisInfo.xDirection, axisInfo.yDirection, boxLength, handleSquares.z);
-                AddSquares(target.position - (axisInfo.xDirection * boxLength), axisInfo.xDirection, axisInfo.yDirection, axisInfo.zDirection, boxLength, handleSquares.all);
-            }
-        }
-
-        void AddSquares(Vector3 axisEnd, Vector3 axisDirection, Vector3 axisOtherDirection1, Vector3 axisOtherDirection2, float size, List<Vector3> resultsBuffer)
-        {
-            Square baseSquare = GetBaseSquare(axisEnd, axisOtherDirection1, axisOtherDirection2, size);
-            Square baseSquareEnd = GetBaseSquare(axisEnd + (axisDirection * (size * 2f)), axisOtherDirection1, axisOtherDirection2, size);
-
-            resultsBuffer.Add(baseSquare.bottomLeft);
-            resultsBuffer.Add(baseSquare.topLeft);
-            resultsBuffer.Add(baseSquare.bottomRight);
-            resultsBuffer.Add(baseSquare.topRight);
-
-            resultsBuffer.Add(baseSquareEnd.bottomLeft);
-            resultsBuffer.Add(baseSquareEnd.topLeft);
-            resultsBuffer.Add(baseSquareEnd.bottomRight);
-            resultsBuffer.Add(baseSquareEnd.topRight);
-
-            for(int i = 0; i < 4; i++)
-            {
-                resultsBuffer.Add(baseSquare[i]);
-                resultsBuffer.Add(baseSquare[i + 1]);
-                resultsBuffer.Add(baseSquareEnd[i + 1]);
-                resultsBuffer.Add(baseSquareEnd[i]);
             }
         }
 
@@ -531,22 +451,6 @@ namespace RuntimeGizmos
             GL.End();
         }
 
-        void DrawSquares(List<Vector3> lines, Color color)
-        {
-            GL.Begin(GL.QUADS);
-            GL.Color(color);
-
-            for(int i = 0; i < lines.Count; i += 4)
-            {
-                GL.Vertex(lines[i]);
-                GL.Vertex(lines[i + 1]);
-                GL.Vertex(lines[i + 2]);
-                GL.Vertex(lines[i + 3]);
-            }
-
-            GL.End();
-        }
-
         void DrawCircles(List<Vector3> lines, Color color)
         {
             GL.Begin(GL.LINES);
@@ -604,12 +508,7 @@ namespace RuntimeGizmos
 
         private bool GetMouseButtonUp(int button)
         {
-            if (!EventSystem.current.IsPointerOverGameObject())
-            {
-                return Input.GetMouseButtonUp(button);
-            }
-
-            return false;
+            return Input.GetMouseButtonUp(button);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using RuntimeGizmos;
+using UnityEditor;
 
 public class GridManager: MonoBehaviour
 {
@@ -75,6 +76,18 @@ public class GridManager: MonoBehaviour
         var bounds = SelectionManager.Instance.GetBounds();
         bounds.center = SelectionManager.Instance.transform.position;
 
+        if (SelectionManager.Instance.Selection.Count == 1)
+        {
+            bounds.size = SelectionManager.Instance.Selection[0].transform.localScale;
+        }
+
+        //Rotation snap
+        var r = select.eulerAngles;
+        r.x = SnapRound( r.x, SnapValueRot ) % 360.0f;
+        r.y = SnapRound( r.y, SnapValueRot ) % 360.0f;
+        r.z = SnapRound( r.z, SnapValueRot ) % 360.0f;
+        select.eulerAngles = r;
+
         // Snap the max
         var t = bounds.max;
         t.x = SnapRound( t.x, SnapValue );
@@ -98,20 +111,13 @@ public class GridManager: MonoBehaviour
         select.position = bounds.center;
         select.localScale = bounds.size;
 
-        //Rotation snap
-        var r = select.eulerAngles;
-        r.x = SnapRound( r.x, SnapValueRot ) % 360.0f;
-        r.y = SnapRound( r.y, SnapValueRot ) % 360.0f;
-        r.z = SnapRound( r.z, SnapValueRot ) % 360.0f;
-        select.eulerAngles = r;
-
         if (OnSnap != null)
         {
             OnSnap();
         }
     }
 
-    private float SnapRound( float input, float snapValue )
+    private static float SnapRound( float input, float snapValue )
     {
         return snapValue * Mathf.Round((input / snapValue));
     }

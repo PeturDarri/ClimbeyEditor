@@ -6,8 +6,8 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: Spikes
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Name: SpikesBase
+  m_Shader: {fileID: 4800000, guid: 19fdae055646bae4ba60c2482c2ddb72, type: 3}
   m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
   m_CustomRenderQueue: -1
@@ -48,7 +48,13 @@ Material:
     - first:
         name: _MainTex
       second:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - first:
+        name: _MainTexTop
+      second:
+        m_Texture: {fileID: 2800000, guid: 78102a7b12522134fb84badae12a975f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - first:
@@ -87,13 +93,13 @@ Material:
       second: 1
     - first:
         name: _Glossiness
-      second: 0.5
+      second: 0.674
     - first:
         name: _GlossyReflections
       second: 1
     - first:
         name: _Metallic
-      second: 0.795
+      second: 0
     - first:
         name: _Mode
       second: 0
@@ -103,6 +109,12 @@ Material:
     - first:
         name: _Parallax
       second: 0.02
+    - first:
+        name: _Scale
+      second: 1
+    - first:
+        name: _Scale2
+      second: 1
     - first:
         name: _SmoothnessTextureChannel
       second: 0
@@ -121,7 +133,7 @@ Material:
     m_Colors:
     - first:
         name: _Color
-      second: {r: 1, g: 1, b: 1, a: 1}
+      second: {r: 0.04411763, g: 0.04411763, b: 0.04411763, a: 1}
     - first:
         name: _EmissionColor
       second: {r: 0, g: 0, b: 0, a: 1}

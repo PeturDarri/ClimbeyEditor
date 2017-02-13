@@ -79,6 +79,11 @@ public class LevelObject : MonoBehaviour
         newObj.name = name;
         return new List<LevelObject> {newObj.GetComponent<LevelObject>()};
     }
+
+    public virtual Bounds GetBounds()
+    {
+        return GetComponent<Collider>().bounds;
+    }
 }
 
 public enum Shape
