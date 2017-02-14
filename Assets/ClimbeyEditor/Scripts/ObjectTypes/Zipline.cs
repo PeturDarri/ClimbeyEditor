@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UndoMethods;
 using UnityEngine;
 
 public class Zipline : LevelObject
@@ -13,7 +14,11 @@ public class Zipline : LevelObject
     public GameObject Line;
     public GameObject PoleBlockPrefab;
     public bool canDupe = true;
-    private Transform _lineTransform;
+
+    private Transform _lineTransform
+    {
+        get { return transform.parent.FindChild("LineZip"); }
+    }
 
     public void Awake()
     {
@@ -22,11 +27,18 @@ public class Zipline : LevelObject
         var parent = new GameObject("ZiplineGroup").transform;
         parent.parent = LevelManager.Instance.transform;
         transform.parent = parent;
-        _lineTransform = Instantiate(Line, parent).transform;
+        var lineZip = Instantiate(Line, parent);
+        lineZip.name = "LineZip";
         PoleBlocks.Add(CreatePole());
-        PoleBlocks[0].transform.position = transform.position + transform.forward * 2;
+        PoleBlocks[0].transform.position = SelectionManager.Instance.transform.position + transform.forward * 2;
         PoleBlocks.Add(CreatePole());
-        PoleBlocks[1].transform.position = transform.position - transform.forward * 2;
+        PoleBlocks[1].transform.position = SelectionManager.Instance.transform.position - transform.forward * 2;
+    }
+
+    public override void Start()
+    {
+        base.Start();
+        SelectionManager.Instance.CenterSelf();
     }
 
     public void SetPoles(LevelManager.Block pole1, LevelManager.Block pole2)
@@ -40,6 +52,7 @@ public class Zipline : LevelObject
     private void Update()
     {
         canDupe = true;
+
         //Stretch line between poles
         _lineTransform.position = (PoleBlocks[0].Pivot.position + PoleBlocks[1].Pivot.position) / 2;
         _lineTransform.LookAt(PoleBlocks[0].Pivot.position);
@@ -75,9 +88,15 @@ public class Zipline : LevelObject
         return new Bounds();
     }
 
+    public override void DoDestroy(bool destroy = true)
+    {
+        UndoRedoManager.Instance().Push(DoDestroy, !destroy);
+
+        transform.parent.gameObject.SetActive(!destroy);
+    }
+
     public void SelfDestruct()
     {
-        Debug.Log("destroy");
         if (PoleBlocks[0] != null)
             Destroy(PoleBlocks[0].gameObject);
         if (PoleBlocks[1] != null)

@@ -24,7 +24,7 @@ public class PoleBlock : LevelObject
                 LockY = LockY,
                 LockZ = LockZ,
                 Position = transform.position,
-                Rotation = Quaternion.Euler(_startRot),
+                Rotation = transform.rotation,
                 Size = _startScale,
                 Type = ""
             };
@@ -55,7 +55,8 @@ public class PoleBlock : LevelObject
     {
         if (!ParentZip.canDupe) return null;
         ParentZip.canDupe = false;
-        var newZip = Instantiate(transform.parent, transform.parent);
+        var newZip = Instantiate(transform.parent, LevelManager.Instance.transform);
+        UndoRedoManager.Instance().Push(DoDestroy, gameObject.activeSelf, "Duplicate object");
         newZip.name = transform.parent.name;
         return new List<LevelObject> {newZip.GetComponentInChildren<Zipline>().PoleBlocks[0], newZip.GetComponentInChildren<Zipline>().PoleBlocks[1]};
     }

@@ -56,7 +56,7 @@ GameObject:
   - component: {fileID: 65339993847196412}
   - component: {fileID: 114385457123180768}
   m_Layer: 0
-  m_Name: FinishLine
+  m_Name: Finishline
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -207,9 +207,10 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
-  Rotateable: 1
+  Groupable: 0
+  Rotateable: 0
   Scaleable: 0
-  TypeString: FinishLine
+  TypeString: Finishline
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
   canDestroy: 0

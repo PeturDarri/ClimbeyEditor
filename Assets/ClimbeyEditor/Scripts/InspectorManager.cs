@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UndoMethods;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
+using Button = UnityEngine.UI.Button;
 
 public class InspectorManager : MonoBehaviour
 {
 
     public static InspectorManager Instance;
+
+    public delegate void GroupSelection();
 
     private void Awake()
     {
@@ -44,9 +42,10 @@ public class InspectorManager : MonoBehaviour
         ClearPanel();
         if (selection.Count == 0) return;
         CreateHeader(selection.Count > 1 ? selection.Count + " selected" : selection[0].Type.ToString());
+        var allSame = true;
+        var allGroupable = true;
         if (selection.Count >= 1)
         {
-            var allSame = true;
             var type = selection[0].GetType();
             foreach (var child in selection.ToList())
             {
@@ -54,14 +53,27 @@ public class InspectorManager : MonoBehaviour
                 {
                     allSame = false;
                 }
-            }
 
-            if (!allSame)
-            {
-                return;
+                if (!child.Groupable)
+                {
+                    allGroupable = false;
+                }
+
             }
         }
+
         var properties = selection[0].GetProperties();
+
+        if (!allSame)
+        {
+            properties.Clear();
+        }
+
+        if (allGroupable && selection.Count > 1)
+        {
+            var groupSelection = new GroupSelection(SelectionManager.Instance.GroupSelection);
+            properties.Add("Create group", groupSelection);
+        }
 
         foreach (var field in properties)
         {
@@ -81,7 +93,7 @@ public class InspectorManager : MonoBehaviour
                     dropdown.options.Add(new Dropdown.OptionData(theEnum.ToString()));
                 }
 
-                var allSame = true;
+                allSame = true;
                 foreach (var child in selection)
                 {
                     var childProperties = child.GetProperties();
@@ -103,7 +115,7 @@ public class InspectorManager : MonoBehaviour
                 var text = template.GetComponentInChildren<InputField>();
                 var fieldString = field.Key;
 
-                var allSame = true;
+                allSame = true;
                 foreach (var child in selection)
                 {
                     var childProperties = child.GetProperties();
@@ -124,7 +136,7 @@ public class InspectorManager : MonoBehaviour
                 var text = template.GetComponentInChildren<InputField>();
                 text.contentType = InputField.ContentType.IntegerNumber;
 
-                var allSame = true;
+                allSame = true;
                 foreach (var child in selection)
                 {
                     var childProperties = child.GetProperties();
@@ -146,7 +158,7 @@ public class InspectorManager : MonoBehaviour
                 var text = template.GetComponentInChildren<InputField>();
                 text.contentType = InputField.ContentType.DecimalNumber;
 
-                var allSame = true;
+                allSame = true;
                 foreach (var child in selection)
                 {
                     var childProperties = child.GetProperties();
@@ -168,7 +180,7 @@ public class InspectorManager : MonoBehaviour
                 var toggle = template.GetComponentInChildren<Toggle>();
                 var fieldString = field.Key;
 
-                var allSame = true;
+                allSame = true;
                 foreach (var child in selection)
                 {
                     var childProperties = child.GetProperties();
@@ -228,9 +240,16 @@ public class InspectorManager : MonoBehaviour
 
     private static void ButtonPressed(Delegate method)
     {
-        foreach (var select in SelectionManager.Instance.Selection.ToList())
+        if (method.Method.Name == "GroupSelection")
         {
             method.DynamicInvoke();
+            return;
+        }
+
+        foreach (var select in SelectionManager.Instance.Selection.ToList())
+        {
+            var newMethod = select.GetType().GetMethod(method.Method.Name);
+            newMethod.Invoke(select, null);
         }
     }
 }

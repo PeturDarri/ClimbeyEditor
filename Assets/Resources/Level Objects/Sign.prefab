@@ -314,7 +314,13 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Groupable: 0
+  Rotateable: 1
   Scaleable: 0
+  TypeString: 
+  _startScale: {x: 0, y: 0, z: 0}
+  _startRot: {x: 0, y: 0, z: 0}
+  canDestroy: 1
 --- !u!222 &222385639999352464
 CanvasRenderer:
   m_ObjectHideFlags: 1

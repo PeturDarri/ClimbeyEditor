@@ -110,8 +110,9 @@ public class SelectionManager : MonoBehaviour
         DragSelection();
         SelectionHotkeys();
         if (!isTransforming) return;
-        TransformSelection();
         UpdateTransform();
+        if (GridManager.Instance.DoSnap) return;
+        TransformSelection();
     }
 
     private void IsTransformingChanged()
@@ -178,7 +179,6 @@ public class SelectionManager : MonoBehaviour
 
     private void Snap()
     {
-        Debug.Log("SNAP");
         TransformSelection();
     }
 
@@ -188,7 +188,6 @@ public class SelectionManager : MonoBehaviour
         {
             RemoveFromSelection(obj);
         }
-        //Selection.Clear();
     }
 
     private void ResetPrev()
@@ -203,7 +202,6 @@ public class SelectionManager : MonoBehaviour
     {
         //Set parent position to center of all children
         var bounds = GetBounds();
-        //transform.localScale = bounds.size;
         transform.position = transform.position + bounds.center;
         transform.localScale = Selection.Count == 1 ? Selection[0].transform.localScale : bounds.size;
         transform.eulerAngles = GetChildRotation();
@@ -237,7 +235,7 @@ public class SelectionManager : MonoBehaviour
             }
             else if (Input.GetKeyDown(KeyCode.G))
             {
-                //GroupSelection();
+                GroupSelection();
             }
             else if (Input.GetKeyDown(KeyCode.C))
             {
@@ -463,7 +461,6 @@ public class SelectionManager : MonoBehaviour
 
     public void TransformSelectionEnd(PosRotSize posRotSize)
     {
-        Debug.Log("TRANSFORM END");
         UndoRedoManager.Instance().Push(TransformSelectionEnd, new PosRotSize((prevPosRotSize.Pos - posRotSize.Pos) - transform.position, (prevPosRotSize.Rot - posRotSize.Rot) - transform.eulerAngles, (prevPosRotSize.Size - posRotSize.Size) - transform.localScale), "Transform selection");
         var selection = Selection.ToList();
         foreach (var child in selection)
@@ -492,6 +489,21 @@ public class SelectionManager : MonoBehaviour
             SetSelection(obj.transform);
             UndoRedoManager.Instance().Push(lvlObj.DoDestroy, obj.activeSelf);
         }
+    }
+
+    public void GroupSelection()
+    {
+        if (Selection.Any(select => !select.Groupable))
+        {
+            return;
+        }
+
+        var prefab = Resources.Load("Level Objects/ClimbeyGroup");
+        var group = (GameObject)Instantiate(prefab, LevelManager.Instance.transform);
+        var groupComp = group.GetComponent<Group>();
+        groupComp.Name = LevelManager.Instance.Groups.Count.ToString();
+        groupComp.BreakMakeGroup(Selection);
+        LevelManager.Instance.Groups.Add(groupComp.VirtualGroup());
     }
 
     private void DragSelection()

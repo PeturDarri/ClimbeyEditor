@@ -174,6 +174,7 @@ public class LevelManager : MonoBehaviour
 
     public void LoadLevel(string levelFile = null)
     {
+        ClearLists();
         if (string.IsNullOrEmpty(levelFile))
         {
             // Open file with filter
@@ -193,6 +194,7 @@ public class LevelManager : MonoBehaviour
             }
         }
         SelectionManager.Instance.ClearSelection();
+        UndoRedoManager.Instance().Clear();
         foreach (var obj in LevelObjects)
         {
             Destroy(obj.gameObject);
@@ -200,8 +202,16 @@ public class LevelManager : MonoBehaviour
         var loadedLevel = new Level();
         JsonUtility.FromJsonOverwrite(File.ReadAllText(levelFile), loadedLevel);
 
+        if (loadedLevel.GroupsArray != null && loadedLevel.GroupsArray.Any())
+        Groups.AddRange(loadedLevel.GroupsArray);
+
         foreach (var block in loadedLevel.LevelArray)
         {
+            if (block.Type.Contains("Group:"))
+            {
+                CreateGroup(block);
+                continue;
+            }
             var prefab = (GameObject) Resources.Load("Level Objects/" + block.Type);
             if (prefab == null) continue;
             var newBlock = Instantiate(prefab);
@@ -332,9 +342,27 @@ public class LevelManager : MonoBehaviour
                 MovingBlocks.Add((MovingBlock) obj);
                 break;
             case "LevelManager+SettingsBlock":
-                Settings = (SettingsBlock)obj;
+                Settings = (SettingsBlock) obj;
                 break;
         }
+    }
+
+    public void NewGroup(ClimbeyGroup group)
+    {
+        if (Groups.Any(g => g.Name == group.Name)) return;
+        Groups.Add(group);
+    }
+
+    private void CreateGroup(Block groupBlock)
+    {
+        var groupName = groupBlock.Type.Split(':')[1];
+        var prefab = (GameObject) Resources.Load("Level Objects/ClimbeyGroup");
+        var newGroup = Instantiate(prefab, transform);
+        var groupComp = newGroup.GetComponent<Group>();
+        newGroup.transform.position = groupBlock.Position;
+        newGroup.transform.localScale = groupBlock.Size;
+        newGroup.transform.rotation = groupBlock.Rotation;
+        groupComp.Name = groupName;
     }
 
     private void ClearLists()

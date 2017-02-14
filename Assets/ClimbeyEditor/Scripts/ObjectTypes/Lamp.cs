@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Lamp : BasicBlock
 {
-    private Color _color;
+    private Color _color = Color.white;
     public Texture LampSprite;
 
     private bool _hidden;

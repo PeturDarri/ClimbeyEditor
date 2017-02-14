@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using UndoMethods;
 using UnityEngine;
 
 public class MovingBlock : LevelObject
@@ -40,13 +41,14 @@ public class MovingBlock : LevelObject
 
     public override LevelManager.Block GetObject()
     {
+        StopPreview();
         var wayList = Waypoints.Select(way => way.VirtualBlock).ToList();
 
         var newBlock = new LevelManager.MovingBlock()
         {
             Type = "MovingBlock",
             Size = transform.localScale,
-            Position = _position,
+            Position = transform.position,
             Rotation = transform.rotation,
             LockX = LockX,
             LockY = LockY,
@@ -83,6 +85,12 @@ public class MovingBlock : LevelObject
         var newList = new List<LevelObject> {move};
         newList.AddRange(dupeGroup.GetComponentsInChildren<Waypoint>());
         return newList;
+    }
+
+    public override void DoDestroy(bool destroy = true)
+    {
+        UndoRedoManager.Instance().Push(DoDestroy, !destroy);
+        transform.parent.gameObject.SetActive(!destroy);
     }
 
     public override void OnDestroy()

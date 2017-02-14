@@ -139,6 +139,7 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Groupable: 0
   Rotateable: 0
   Scaleable: 1
   TypeString: MovingBlock

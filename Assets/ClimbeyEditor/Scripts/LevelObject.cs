@@ -8,6 +8,7 @@ public class LevelObject : MonoBehaviour
     public ObjectType Type;
     public bool LockX, LockY, LockZ;
     public bool IsSelected;
+    public bool Groupable = true;
     public bool Rotateable = true;
     public bool Scaleable = true;
     public string TypeString;
@@ -113,5 +114,6 @@ public enum ObjectType
     Lamp,
     Waypoint,
     Sign,
+    Group,
     None
 }

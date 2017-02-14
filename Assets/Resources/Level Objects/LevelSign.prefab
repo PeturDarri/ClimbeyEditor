@@ -314,6 +314,7 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Groupable: 0
   Rotateable: 1
   Scaleable: 0
   TypeString: LevelSign
