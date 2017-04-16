@@ -1,6 +1,8 @@
 # ClimbeyEditor
 A desktop level editor for Climbey.
 
+![Gif](https://puu.sh/tR41y/de80d43d53.gif)
+
 ### Controls:
 Camera controls work the same way as in the Unity editor.
 Hold left alt and click and drag to orbit the camera.
