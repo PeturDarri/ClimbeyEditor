@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using RuntimeGizmos;
-using UnityEditor;
 
 public class GridManager: MonoBehaviour
 {

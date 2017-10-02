@@ -66,7 +66,7 @@ public class MouseOrbit : MonoBehaviour
         else
         {
             // see if mouse wheel is used
-            if (Input.GetAxis("Mouse ScrollWheel") != 0)
+            if (Input.GetAxis("Mouse ScrollWheel") != 0 && !EditorUtil.IsMouseOverUI())
             {
                 // get mouse wheel info to zoom in and out
                 distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel")* (scrollSpeed * (distance / 20)), 0, zoomMax);

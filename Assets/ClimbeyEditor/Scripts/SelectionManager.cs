@@ -267,10 +267,7 @@ public class SelectionManager : MonoBehaviour
                     OnSelectionChanged();
                 }
             }
-        }
-        else if (Input.GetKey(KeyCode.LeftShift))
-        {
-            if (Input.GetKeyDown(KeyCode.Z))
+            else if (Input.GetKeyDown(KeyCode.Z))
             {
                 //Undo
                 UndoRedoManager.Instance().Undo();
@@ -508,13 +505,13 @@ public class SelectionManager : MonoBehaviour
 
     private void DragSelection()
     {
-        if (GetMouseButtonDown(0))
+        if (EditorUtil.GetMouseButtonDown(0))
         {
             prevMouse = mousePos;
             isDragging = true;
         }
 
-        if (GetMouseButton(0))
+        if (EditorUtil.GetMouseButton(0))
         {
             if (Vector2.Distance(mousePos, prevMouse) > 10 && CameraManager.Instance.cameraState == CameraManager.CameraState.Free && !isTransforming)
             {
@@ -522,7 +519,7 @@ public class SelectionManager : MonoBehaviour
             }
         }
 
-        if (GetMouseButtonUp(0))
+        if (EditorUtil.GetMouseButtonUp(0))
         {
             var box = FromDragPoints(prevMouse, mousePos);
             if (isDragging && shouldDrawBox)
@@ -586,22 +583,6 @@ public class SelectionManager : MonoBehaviour
             height = Mathf.Abs(d.y)
         };
         return r;
-    }
-
-    //Here to ignore mouse events if user is interacting with UI
-    private bool GetMouseButtonDown(int button)
-    {
-        return !EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(button);
-    }
-
-    private bool GetMouseButton(int button)
-    {
-        return !EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButton(button);
-    }
-
-    private bool GetMouseButtonUp(int button)
-    {
-        return Input.GetMouseButtonUp(button);
     }
 }
 

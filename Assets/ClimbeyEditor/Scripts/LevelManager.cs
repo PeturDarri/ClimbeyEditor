@@ -290,6 +290,9 @@ public class LevelManager : MonoBehaviour
                 newBlock.transform.rotation = move.Rotation;
                 newBlock.transform.localScale = move.Size;
                 var newMove = newBlock.GetComponent<global::MovingBlock>();
+                newMove.BlockType = move.Type == "MovingDeath"
+                    ? global::MovingBlock.Type.Death
+                    : global::MovingBlock.Type.Normal;
                 newMove.ArrivalTime = move.ArrivalTime;
                 newMove.PingPong = move.PingPong;
                 newMove.Speed = move.Speed;

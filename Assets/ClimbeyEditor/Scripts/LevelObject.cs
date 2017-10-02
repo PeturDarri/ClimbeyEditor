@@ -53,7 +53,10 @@ public class LevelObject : MonoBehaviour
 
     public void OnSave()
     {
-        LevelManager.Instance.RegisterObject(GetObject());
+        if (gameObject.activeInHierarchy)
+        {
+            LevelManager.Instance.RegisterObject(GetObject());
+        }
     }
 
     public virtual LevelManager.Block GetObject()
@@ -115,5 +118,6 @@ public enum ObjectType
     Waypoint,
     Sign,
     Group,
+    MovingDeath,
     None
 }

@@ -108,7 +108,7 @@ public class SelectBounds : MonoBehaviour
 
     private void GetHandle()
     {
-        if (Input.GetMouseButton(0))
+        if (EditorUtil.GetMouseButton(0))
         {
             selectedHandle = Vector3.zero;
 
@@ -137,7 +137,7 @@ public class SelectBounds : MonoBehaviour
                 moveType = MoveType.Move;
             }
         }
-        else if (Input.GetMouseButtonUp(0))
+        else if (EditorUtil.GetMouseButtonUp(0))
         {
             selectedHandle = Vector3.zero;
         }
@@ -145,7 +145,7 @@ public class SelectBounds : MonoBehaviour
 
     private void ScaleHandle()
     {
-        if(selectedHandle != Vector3.zero && Input.GetMouseButtonDown(0))
+        if(selectedHandle != Vector3.zero && EditorUtil.GetMouseButtonDown(0))
         {
             StartCoroutine(ScaleHandleRoutine());
         }
@@ -160,8 +160,8 @@ public class SelectBounds : MonoBehaviour
         var previousMousePosition = Vector3.zero;
         var emptySelection = SelectionManager.Instance.emptySelection;
         GetComponent<TransformGizmo>().isTransforming = true;
-
-        while (!Input.GetMouseButtonUp(0) && CameraManager.Instance.cameraState == CameraManager.CameraState.Free)
+        
+        while (!EditorUtil.GetMouseButtonUp(0) && CameraManager.Instance.cameraState == CameraManager.CameraState.Free)
         {
             var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             var mousePosition = Geometry.LinePlaneIntersect(mouseRay.origin, mouseRay.direction,
@@ -203,7 +203,6 @@ public class SelectBounds : MonoBehaviour
         }
         GetComponent<TransformGizmo>().isTransforming = false;
     }
-
 
     private Bounds GetBoundsWithoutRotation(LevelObject obj)
     {

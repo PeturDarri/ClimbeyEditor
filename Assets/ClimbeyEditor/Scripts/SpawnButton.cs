@@ -1,25 +1,28 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SpawnButton : MonoBehaviour
 {
-
     public GameObject spawnObject;
 
 	// Use this for initialization
-	void Start () {
+	private void Start ()
+	{
 	    GetComponent<Button>().onClick.AddListener(OnClick);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-    void OnClick()
+    private void OnClick()
     {
-        ToolManager.Instance.SpawnObject(spawnObject);
+	    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) &&
+	        !SelectionManager.Instance.isEmpty && spawnObject.GetComponent<LevelObject>().GetType() == typeof(BasicBlock))
+	    {
+		    ToolManager.Instance.SwitchSelectionToObject(spawnObject);
+		    return;
+	    }
+
+	    ToolManager.Instance.SpawnObject(spawnObject);
     }
 }

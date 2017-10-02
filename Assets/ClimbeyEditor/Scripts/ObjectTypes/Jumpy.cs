@@ -19,7 +19,7 @@ public class Jumpy : LevelObject
         //Reset rotation
         var prevRot = transform.rotation;
         transform.rotation = Quaternion.identity;
-        transform.FindChild("Tramp").transform.position = new Vector3(transform.position.x, (transform.position.y + topY) - 0.005f, transform.position.z);
+        transform.Find("Tramp").transform.position = new Vector3(transform.position.x, (transform.position.y + topY) - 0.005f, transform.position.z);
         transform.rotation = prevRot;
     }
 }

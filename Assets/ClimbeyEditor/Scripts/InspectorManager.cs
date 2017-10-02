@@ -105,7 +105,8 @@ public class InspectorManager : MonoBehaviour
 
                 dropdown.value = Enum.GetValues(typeof(Shape)).Cast<Shape>().ToList().IndexOf((Shape) field.Value);
                 dropdown.captionText.text = allSame ? field.Value.ToString() : "--";
-                dropdown.onValueChanged.AddListener(delegate { FieldChanged("Shape", dropdown.value); });
+                var field1 = field;
+                dropdown.onValueChanged.AddListener(delegate { FieldChanged(field1.Key, dropdown.value); });
             }
             else if (field.Value is string)
             {
@@ -223,19 +224,26 @@ public class InspectorManager : MonoBehaviour
     //Events
     private void FieldChanged(string field, object value)
     {
-        foreach (var select in SelectionManager.Instance.Selection.ToList())
+        using (new UndoTransaction("Change field on selection"))
         {
-            var selectSave = select;
-            SetProperty(field, selectSave, value);
+            foreach (var select in SelectionManager.Instance.Selection.ToList())
+            {
+                var selectSave = select;
+                SetProperty(field, selectSave, value);
+            }
         }
-
+        
         UpdatePanel();
     }
 
     private static void SetProperty(string property, object obj, object value)
     {
-        UndoRedoManager.Instance().Push(v=>SetProperty(property, obj, v), obj.GetType().GetProperty(property).GetValue(obj, null), "Change " + property);
-        obj.GetType().GetProperty(property).SetValue(obj, value, null);
+        var propertyInfo = obj.GetType().GetProperty(property);
+        if (propertyInfo != null)
+            UndoRedoManager.Instance().Push(v => SetProperty(property, obj, v),
+                propertyInfo.GetValue(obj, null), "Change " + property);
+        var memberInfo = obj.GetType().GetProperty(property);
+        if (memberInfo != null) memberInfo.SetValue(obj, value, null);
     }
 
     private static void ButtonPressed(Delegate method)
@@ -246,10 +254,13 @@ public class InspectorManager : MonoBehaviour
             return;
         }
 
-        foreach (var select in SelectionManager.Instance.Selection.ToList())
+        using (new UndoTransaction("Invoke method on selection"))
         {
-            var newMethod = select.GetType().GetMethod(method.Method.Name);
-            newMethod.Invoke(select, null);
+            foreach (var select in SelectionManager.Instance.Selection.ToList())
+            {
+                var newMethod = select.GetType().GetMethod(method.Method.Name);
+                newMethod.Invoke(select, null);
+            }
         }
     }
 }

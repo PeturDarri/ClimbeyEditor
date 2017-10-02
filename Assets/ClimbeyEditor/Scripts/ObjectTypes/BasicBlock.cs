@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UndoMethods;
 using UnityEngine;
 
 public class BasicBlock : LevelObject
-{
+{   
     public Shape _shape;
     public Shape Shape
     {

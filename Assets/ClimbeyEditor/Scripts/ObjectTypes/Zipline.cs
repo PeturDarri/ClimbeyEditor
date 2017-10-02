@@ -17,12 +17,11 @@ public class Zipline : LevelObject
 
     private Transform _lineTransform
     {
-        get { return transform.parent.FindChild("LineZip"); }
+        get { return transform.parent.Find("LineZip"); }
     }
 
     public void Awake()
     {
-        Debug.Log(transform.parent != LevelManager.Instance.transform);
         if (transform.parent != LevelManager.Instance.transform) return;
         var parent = new GameObject("ZiplineGroup").transform;
         parent.parent = LevelManager.Instance.transform;

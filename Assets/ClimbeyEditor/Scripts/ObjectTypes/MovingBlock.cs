@@ -8,6 +8,33 @@ using UnityEngine;
 
 public class MovingBlock : LevelObject
 {
+    public Material NormalMaterial;
+    public Material DeathMaterial;
+
+    public Type BlockType
+    {
+        get { return _blockType; }
+        set
+        {
+            _blockType = value;
+            UpdateMaterial();
+        }
+    }
+
+    private Type _blockType = Type.Normal;
+
+    public enum Type
+    {
+        Normal,
+        Death
+    }
+
+    private void UpdateMaterial()
+    {
+        var render = GetComponent<Renderer>();
+        render.material = _blockType == Type.Death ? DeathMaterial : NormalMaterial;
+    }
+    
     public List<Waypoint> Waypoints
     {
         get { return transform.parent.GetComponentsInChildren<Waypoint>().ToList(); }
@@ -46,7 +73,7 @@ public class MovingBlock : LevelObject
 
         var newBlock = new LevelManager.MovingBlock()
         {
-            Type = "MovingBlock",
+            Type = BlockType == Type.Death ? "MovingDeath" : "MovingBlock",
             Size = transform.localScale,
             Position = transform.position,
             Rotation = transform.rotation,
@@ -69,7 +96,18 @@ public class MovingBlock : LevelObject
         addWaypoint addWaypoint = AddWaypointLocal;
         startPreview startPreview = StartPreview;
         stopPreview stopPreview = StopPreview;
-        return new Dictionary<string, object> {{"ArrivalTime", ArrivalTime}, {"PingPong", PingPong}, {"Speed", Speed}, {"WaitForPlayer", WaitForPlayer}, {"Select All Waypoints", selectWaypoints}, {"Add Waypoint", addWaypoint}, {"Start Preview", startPreview}, {"Stop Preview", stopPreview}};
+        return new Dictionary<string, object>
+        {
+            {"BlockType", BlockType},
+            {"ArrivalTime", ArrivalTime},
+            {"PingPong", PingPong},
+            {"Speed", Speed},
+            {"WaitForPlayer", WaitForPlayer},
+            {"Select All Waypoints", selectWaypoints},
+            {"Add Waypoint", addWaypoint},
+            {"Start Preview", startPreview},
+            {"Stop Preview", stopPreview}
+        };
     }
 
     public override List<LevelObject> Duplicate()
@@ -78,6 +116,7 @@ public class MovingBlock : LevelObject
         dupeGroup.name = transform.parent.name;
         dupeGroup.position = transform.parent.position;
         var move = dupeGroup.GetComponentInChildren<MovingBlock>();
+        UndoRedoManager.Instance().Push(move.DoDestroy, move.gameObject.activeSelf, "Duplicate object");
         move.ArrivalTime = ArrivalTime;
         move.PingPong = PingPong;
         move.Speed = Speed;
@@ -130,6 +169,7 @@ public class MovingBlock : LevelObject
     public void AddWaypointLocal()
     {
         var way = Instantiate((GameObject) Resources.Load("Level Objects/Waypoint"), transform.parent);
+        UndoRedoManager.Instance().Push(way.GetComponent<Waypoint>().DoDestroy, true, "Add waypoint");
         way.transform.position = CameraManager.Instance.GetTarget();
         SelectionManager.Instance.SetSelection(way.transform);
     }
@@ -205,7 +245,7 @@ public class MovingBlock : LevelObject
         _lr.endColor = color;
         _lr.startWidth = 0.1f;
 
-        _lr.numPositions = Waypoints.Count + 1;
+        _lr.positionCount = Waypoints.Count + 1;
         _lr.SetPosition(0, isPreviewing ? _position : transform.position);
         for (var i = 0; i < Waypoints.Count; i++)
         {
