@@ -209,7 +209,7 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
-  Groupable: 0
+  Groupable: 1
   Rotateable: 0
   Scaleable: 0
   TypeString: Finishline

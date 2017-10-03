@@ -73,6 +73,7 @@ MeshRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
+  m_SortingLayer: 0
   m_SortingOrder: 0
 --- !u!33 &33931315314647422
 MeshFilter:
@@ -109,5 +110,11 @@ MonoBehaviour:
   LockY: 0
   LockZ: 0
   IsSelected: 0
+  Groupable: 1
+  Rotateable: 1
   Scaleable: 1
-  Shape: 0
+  TypeString: 
+  _startScale: {x: 0, y: 0, z: 0}
+  _startRot: {x: 0, y: 0, z: 0}
+  canDestroy: 1
+  _shape: 0

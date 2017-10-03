@@ -59,6 +59,18 @@ public class LevelObject : MonoBehaviour
         }
     }
 
+    public virtual void Update()
+    {
+        if (!Rotateable)
+        {
+            transform.eulerAngles = _startRot;
+        }
+        if (!Scaleable)
+        {
+            transform.localScale = _startScale;
+        }
+    }
+
     public virtual LevelManager.Block GetObject()
     {
         var newBlock = new LevelManager.Block()
