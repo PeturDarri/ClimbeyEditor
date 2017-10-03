@@ -153,7 +153,7 @@ public class SelectBounds : MonoBehaviour
 
     private IEnumerator ScaleHandleRoutine()
     {
-        var handle = (RotatePointAroundPivot(selectedHandle, select.position, -select.eulerAngles) - select.position).normalized;
+        var handle = select.InverseTransformDirection(select.position - selectedHandle).normalized;
         var target = select;
         var originalTargetPosition = target.position;
         var planeNormal = (transform.position - target.position).normalized;
