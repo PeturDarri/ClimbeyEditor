@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 23509609824797796}
   - component: {fileID: 114265790994532108}
   m_Layer: 0
-  m_Name: SphereSeethrough
+  m_Name: HalfPipeSeethrough
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -117,4 +117,4 @@ MonoBehaviour:
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
   canDestroy: 1
-  _shape: 1
+  _shape: 5

@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 23509609824797796}
   - component: {fileID: 114265790994532108}
   m_Layer: 0
-  m_Name: SphereSeethrough
+  m_Name: PrismNoGrip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -56,7 +56,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 20a3e09de190de648b23b1b6ba8e6ab2, type: 2}
+  - {fileID: 2100000, guid: b0e854d09118cc04798718110c02707e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35aad701466714b4db10251a6ed77be6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Type: 3
+  Type: 1
   LockX: 0
   LockY: 0
   LockZ: 0
@@ -117,4 +117,4 @@ MonoBehaviour:
   _startScale: {x: 0, y: 0, z: 0}
   _startRot: {x: 0, y: 0, z: 0}
   canDestroy: 1
-  _shape: 1
+  _shape: 6

@@ -135,7 +135,7 @@ public class LevelManager : MonoBehaviour
         }
 
         //Load standard start level
-        LoadLevel("Assets/Resources/startlevel.txt");
+        LoadLevel(Application.dataPath + "/startlevel.txt");
     }
 
     public void SaveLevel(string levelName = "")

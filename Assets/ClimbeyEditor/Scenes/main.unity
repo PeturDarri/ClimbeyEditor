@@ -874,6 +874,8 @@ MonoBehaviour:
   - {fileID: 4300000, guid: ed6f4eef588f5994ebf9e6cdd2b20df6, type: 3}
   - {fileID: 4300002, guid: f6747add90cb7b34a81381ee467569b6, type: 3}
   - {fileID: 4300000, guid: 53c999bb58ebe054f842b24bc8b2d6d1, type: 3}
+  - {fileID: 4300002, guid: 3b4affc1965c05949842789767355952, type: 3}
+  - {fileID: 4300000, guid: e1249a23cd117d245aaf4f7d7d4d9836, type: 3}
   Blocks: []
   SignBlocks: []
   LightBlocks: []

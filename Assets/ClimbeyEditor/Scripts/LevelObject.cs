@@ -96,7 +96,9 @@ public enum Shape
     Sphere = 1,
     Hemi = 2,
     Pipe = 3,
-    Pyramid = 4
+    Pyramid = 4,
+    HalfPipe = 5,
+    Prism = 6
 }
 
 public enum ObjectType
