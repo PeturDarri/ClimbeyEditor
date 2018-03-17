@@ -30,6 +30,11 @@ public class GridManager: MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        if (PlayerPrefs.HasKey("grid"))
+        {
+            SnapValue = PlayerPrefs.GetFloat("grid");
+        }
     }
 
     private void Start()
@@ -124,5 +129,6 @@ public class GridManager: MonoBehaviour
     public void DoubleHalveGrid(bool doDouble)
     {
         SnapValue = doDouble ? SnapValue * 2 : SnapValue / 2;
+        PlayerPrefs.SetFloat("grid", SnapValue);
     }
 }
